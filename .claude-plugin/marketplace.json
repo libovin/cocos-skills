@@ -1,0 +1,35 @@
+{
+  "name": "cocos-creator-skills",
+  "owner": {
+    "name": "Cocos Creator",
+    "email": "developer@cocos.com"
+  },
+  "metadata": {
+    "description": "Cocos Creator 遊戲引擎互動技能 - 包含服務器管理、場景操作、節點操控、預製體管理、組件控制、資源管理、偏好設置、場景視圖等功能。通過 HTTP 協議與 Cocos Creator 編輯器通訊，實現完整的遊戲開發自動化。",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "cocos-creator",
+      "description": "Cocos Creator 遊戲引擎自動化技能 - 提供完整的編輯器控制能力，包括場景管理、節點操作、預製體處理、組件控制、資源管理、調試功能、偏好設置、場景視圖控制等。通過 HTTP 協議與 Cocos Creator 編輯器通訊。",
+      "source": "./skills",
+      "strict": false,
+      "skills": [
+        "./server",
+        "./scene",
+        "./node",
+        "./prefab",
+        "./component",
+        "./asset",
+        "./broadcast",
+        "./debug",
+        "./preferences",
+        "./project",
+        "./scene-view",
+        "./scene-advanced",
+        "./validation",
+        "./reference-image"
+      ]
+    }
+  ]
+}
