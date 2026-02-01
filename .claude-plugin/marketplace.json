@@ -5,30 +5,28 @@
     "email": "developer@cocos.com"
   },
   "metadata": {
-    "description": "Cocos Creator 遊戲引擎互動技能 - 包含服務器管理、場景操作、節點操控、預製體管理、組件控制、資源管理、偏好設置、場景視圖等功能。通過 HTTP 協議與 Cocos Creator 編輯器通訊，實現完整的遊戲開發自動化。",
+    "description": "Cocos Creator 游戏引擎互动技能 - 包含服务器管理、场景操作、资源数据库、构建工具、设备管理、扩展管理、引擎功能、编程辅助、项目管理和信息查询等功能。通过 HTTP 协议与 Cocos Creator 编辑器通讯，实现完整的游戏开发自动化。",
     "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "cocos-creator",
-      "description": "Cocos Creator 遊戲引擎自動化技能 - 提供完整的編輯器控制能力，包括場景管理、節點操作、預製體處理、組件控制、資源管理、調試功能、偏好設置、場景視圖控制等。通過 HTTP 協議與 Cocos Creator 編輯器通訊。",
+      "description": "Cocos Creator 游戏引擎自动化技能 - 提供完整的编辑器控制能力，包括服务器管理、场景操作、资源数据库管理、构建工具、设备管理、扩展管理、引擎功能、编程辅助、项目管理和信息查询。通过 HTTP 协议与 Cocos Creator 编辑器通讯。",
       "source": "./skills",
       "strict": false,
       "skills": [
         "./server",
         "./scene",
-        "./node",
-        "./prefab",
-        "./component",
-        "./asset",
-        "./broadcast",
-        "./debug",
         "./preferences",
         "./project",
-        "./scene-view",
-        "./scene-advanced",
-        "./validation",
-        "./reference-image"
+        "./asset-db",
+        "./builder",
+        "./device",
+        "./extension",
+        "./engine",
+        "./programming",
+        "./program",
+        "./information"
       ]
     }
   ]
