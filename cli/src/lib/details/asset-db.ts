@@ -17,14 +17,14 @@ export const assetDbDetails: ModuleActionDetails = {
     description: '创建新资源文件',
     parameters: [
       { name: 'path', type: 'string', required: true, description: '资源文件路径，如 db://assets/prefabs/Test.prefab' },
-      { name: 'data', type: 'object', required: true, description: '资源数据对象，包含 __type__ 和其他属性' },
+      { name: 'data', type: 'string', required: true, description: '资源数据的 JSON 字符串，包含 __type__ 和其他属性' },
     ],
     examples: [
-      'cocos-skills asset-db create-asset db://assets/prefabs/Test.prefab \'{"__type__":"cc.Prefab"}\'',
-      'cocos-skills asset-db create-asset db://assets/scenes/NewScene.scene \'{"__type__":"cc.SceneAsset"}\'',
-      'cocos-skills asset-db create-asset db://assets/scripts/Game.js \'{"__type__":"cc.Asset","content":"// game code"}\'',
+      'cocos-skills asset-db create-asset db://assets/prefabs/Test.prefab \'"{"__type__":"cc.Prefab"}"\'',
+      'cocos-skills asset-db create-asset db://assets/scenes/NewScene.scene \'"{"__type__":"cc.SceneAsset"}"\'',
+      'cocos-skills asset-db create-asset db://assets/scripts/Game.js \'"{"__type__":"cc.Asset","content":"// game code"}"\'',
     ],
-    notes: 'data 参数必须是包含 __type__ 字段的有效 JSON 对象。常用类型: cc.Prefab, cc.SceneAsset, cc.Asset',
+    notes: 'data 参数必须是 JSON 字符串类型（注意外层需要引号包裹）。常用类型: cc.Prefab, cc.SceneAsset, cc.Asset。创建的资源初始状态为 invalid，需要填充正确的数据后重新导入',
   },
   'import-asset': {
     description: '导入外部资源到项目',

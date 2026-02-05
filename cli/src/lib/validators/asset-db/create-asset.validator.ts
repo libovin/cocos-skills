@@ -4,6 +4,65 @@
 
 import { ValidationError } from '../error.js';
 
+type ValidatorFunction = (data: unknown, extension: string) => void;
+
+const VALIDATORS: Map<string, ValidatorFunction> = new Map([
+  ['.prefab', (data, extension) => {
+    if (!Array.isArray(data)) {
+      throw new ValidationError('asset-db', 'create-asset', 'data', 'Prefab 文件必须使用数组格式，不能使用对象格式。正确格式: [{"__type__":"cc.Prefab",...}, {"__type__":"cc.Node",...}, {"__type__":"cc.PrefabInfo",...}]');
+    }
+    validatePrefabFormat(data as unknown[]);
+  }],
+  ['.scene', (data, extension) => {
+    if (!Array.isArray(data)) {
+      throw new ValidationError('asset-db', 'create-asset', 'data', 'Scene 文件必须使用数组格式，不能使用对象格式。正确格式: [{"__type__":"cc.SceneAsset",...}, {"__type__":"cc.Scene",...}]');
+    }
+    validateSceneFormat(data as unknown[]);
+  }],
+  ['.material', (data, extension) => {
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      throw new ValidationError('asset-db', 'create-asset', 'data', 'Material 文件必须使用对象格式');
+    }
+    validateMaterialFormat(data as Record<string, unknown>);
+  }],
+  ['.mtl', (data, extension) => {
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      throw new ValidationError('asset-db', 'create-asset', 'data', 'Material 文件必须使用对象格式');
+    }
+    validateMaterialFormat(data as Record<string, unknown>);
+  }],
+  ['.pmtl', (data, extension) => {
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      throw new ValidationError('asset-db', 'create-asset', 'data', 'Physics Material 文件必须使用对象格式');
+    }
+    validatePhysicsMaterialFormat(data as Record<string, unknown>);
+  }],
+  ['.anim', (data, extension) => {
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      throw new ValidationError('asset-db', 'create-asset', 'data', 'Animation Clip 文件必须使用对象格式');
+    }
+    validateAnimationClipFormat(data as Record<string, unknown>);
+  }],
+  ['.animask', (data, extension) => {
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      throw new ValidationError('asset-db', 'create-asset', 'data', 'Animation Mask 文件必须使用对象格式');
+    }
+    validateAnimationMaskFormat(data as Record<string, unknown>);
+  }],
+  ['.pac', (data, extension) => {
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      throw new ValidationError('asset-db', 'create-asset', 'data', 'Sprite Atlas 文件必须使用对象格式');
+    }
+    validateSpriteAtlasFormat(data as Record<string, unknown>);
+  }],
+  ['.labelatlas', (data, extension) => {
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      throw new ValidationError('asset-db', 'create-asset', 'data', 'Label Atlas 文件必须使用对象格式');
+    }
+    validateLabelAtlasFormat(data as Record<string, unknown>);
+  }],
+]);
+
 export function validateCreateAsset(params: unknown[]): void {
   if (params.length < 2) {
     throw new ValidationError('asset-db', 'create-asset', 'params', '至少需要 2 个参数：path 和 data');
@@ -31,36 +90,9 @@ export function validateCreateAsset(params: unknown[]): void {
     const parsed = JSON.parse(data);
     const extension = getFileExtension(path);
 
-    if (Array.isArray(parsed)) {
-      if (extension === '.prefab') {
-        validatePrefabFormat(parsed);
-      } else if (extension === '.scene') {
-        validateSceneFormat(parsed);
-      } else {
-        validateGenericArrayFormat(parsed);
-      }
-    }
-    else if (typeof parsed === 'object' && parsed !== null) {
-      if (!('__type__' in parsed)) {
-        throw new ValidationError('asset-db', 'create-asset', 'data', 'JSON 对象必须包含 __type__ 字段（如 cc.Prefab、cc.SceneAsset）');
-      }
-      if (extension === '.material' || extension === '.mtl') {
-        validateMaterialFormat(parsed);
-      } else if (extension === '.pmtl') {
-        validatePhysicsMaterialFormat(parsed);
-      } else if (extension === '.anim') {
-        validateAnimationClipFormat(parsed);
-      } else if (extension === '.animask') {
-        validateAnimationMaskFormat(parsed);
-      } else if (extension === '.pac') {
-        validateSpriteAtlasFormat(parsed);
-      } else if (extension === '.labelatlas') {
-        validateLabelAtlasFormat(parsed);
-      } else {
-        validateGenericObjectFormat(parsed, extension);
-      }
-    } else {
-      throw new ValidationError('asset-db', 'create-asset', 'data', 'JSON 必须是数组或对象类型');
+    const validator = VALIDATORS.get(extension);
+    if (validator) {
+      validator(parsed, extension);
     }
   } catch (e) {
     if (e instanceof ValidationError) {
@@ -186,22 +218,6 @@ function validateSceneItem(item: Record<string, unknown>): void {
   validateVec3(item._euler, '_euler');
 }
 
-function validateGenericArrayFormat(items: unknown[]): void {
-  if (items.length === 0) {
-    throw new ValidationError('asset-db', 'create-asset', 'data', 'JSON 数组不能为空');
-  }
-
-  if (typeof items[0] !== 'object' || items[0] === null) {
-    throw new ValidationError('asset-db', 'create-asset', 'data', 'JSON 数组第一个元素必须是对象');
-  }
-
-  const firstItem = items[0] as Record<string, unknown>;
-
-  if (!('__type__' in firstItem)) {
-    throw new ValidationError('asset-db', 'create-asset', 'data', 'JSON 数组第一个元素必须包含 __type__ 字段');
-  }
-}
-
 function validateAnimationMaskFormat(item: Record<string, unknown>): void {
   const requiredFields = ['__type__', '_name', '_objFlags', '_native', '_jointMasks'];
   for (const field of requiredFields) {
@@ -321,48 +337,6 @@ function validateAnimationClipFormat(item: Record<string, unknown>): void {
   if (!Array.isArray(item._events)) {
     throw new ValidationError('asset-db', 'create-asset', 'data', 'cc.AnimationClip._events 必须是数组');
   }
-}
-
-function validateGenericObjectFormat(item: Record<string, unknown>, extension: string): void {
-  if (!('__type__' in item)) {
-    throw new ValidationError('asset-db', 'create-asset', 'data', `JSON 对象必须包含 __type__ 字段`);
-  }
-
-  const validTypes = getValidTypesForExtension(extension);
-  if (validTypes.length > 0 && !validTypes.includes(item.__type__ as string)) {
-    throw new ValidationError('asset-db', 'create-asset', 'data', `文件扩展名 ${extension} 不匹配的 __type__: ${item.__type__}。期望类型: ${validTypes.join(', ')}`);
-  }
-}
-
-function getValidTypesForExtension(extension: string): string[] {
-  const typeMap: Record<string, string[]> = {
-    '.prefab': ['cc.Prefab'],
-    '.scene': ['cc.SceneAsset'],
-    '.png': ['cc.Texture2D', 'cc.SpriteFrame'],
-    '.jpg': ['cc.Texture2D', 'cc.SpriteFrame'],
-    '.jpeg': ['cc.Texture2D', 'cc.SpriteFrame'],
-    '.webp': ['cc.Texture2D', 'cc.SpriteFrame'],
-    '.bmp': ['cc.Texture2D', 'cc.SpriteFrame'],
-    '.mp3': ['cc.AudioClip'],
-    '.ogg': ['cc.AudioClip'],
-    '.wav': ['cc.AudioClip'],
-    '.m4a': ['cc.AudioClip'],
-    '.ttf': ['cc.Font'],
-    '.otf': ['cc.Font'],
-    '.json': ['cc.JsonAsset', 'cc.Prefab', 'cc.SceneAsset'],
-    '.txt': ['cc.TextAsset'],
-    '.md': ['cc.TextAsset'],
-    '.material': ['cc.Material'],
-    '.mtl': ['cc.Material'],
-    '.pmtl': ['cc.PhysicsMaterial'],
-    '.anim': ['cc.AnimationClip'],
-    '.animask': ['cc.animation.AnimationMask'],
-    '.pac': ['cc.SpriteAtlas'],
-    '.labelatlas': ['cc.LabelAtlas'],
-    '.fire': ['cc.Prefab'],
-  };
-
-  return typeMap[extension] || [];
 }
 
 function validatePrefabStructure(items: unknown[]): void {
@@ -485,12 +459,23 @@ function validateVec3(value: unknown, fieldName: string): void {
   }
 
   const vec3 = value as Record<string, unknown>;
-  if (vec3.__type__ !== 'cc.Vec3') {
-    throw new ValidationError('asset-db', 'create-asset', 'data', `${fieldName}.__type__ 必须是 cc.Vec3`);
+  const requiredFields = ['x', 'y', 'z'];
+  for (const field of requiredFields) {
+    if (!(field in vec3)) {
+      throw new ValidationError('asset-db', 'create-asset', 'data', `${fieldName} 缺少必需字段: ${field}`);
+    }
   }
 
-  if (typeof vec3.x !== 'number' || typeof vec3.y !== 'number' || typeof vec3.z !== 'number') {
-    throw new ValidationError('asset-db', 'create-asset', 'data', `${fieldName} 必须包含 x、y、z 数字字段`);
+  if (typeof vec3.x !== 'number') {
+    throw new ValidationError('asset-db', 'create-asset', 'data', `${fieldName}.x 必须是数字`);
+  }
+
+  if (typeof vec3.y !== 'number') {
+    throw new ValidationError('asset-db', 'create-asset', 'data', `${fieldName}.y 必须是数字`);
+  }
+
+  if (typeof vec3.z !== 'number') {
+    throw new ValidationError('asset-db', 'create-asset', 'data', `${fieldName}.z 必须是数字`);
   }
 }
 
@@ -500,11 +485,26 @@ function validateQuat(value: unknown, fieldName: string): void {
   }
 
   const quat = value as Record<string, unknown>;
-  if (quat.__type__ !== 'cc.Quat') {
-    throw new ValidationError('asset-db', 'create-asset', 'data', `${fieldName}.__type__ 必须是 cc.Quat`);
+  const requiredFields = ['x', 'y', 'z', 'w'];
+  for (const field of requiredFields) {
+    if (!(field in quat)) {
+      throw new ValidationError('asset-db', 'create-asset', 'data', `${fieldName} 缺少必需字段: ${field}`);
+    }
   }
 
-  if (typeof quat.x !== 'number' || typeof quat.y !== 'number' || typeof quat.z !== 'number' || typeof quat.w !== 'number') {
-    throw new ValidationError('asset-db', 'create-asset', 'data', `${fieldName} 必须包含 x、y、z、w 数字字段`);
+  if (typeof quat.x !== 'number') {
+    throw new ValidationError('asset-db', 'create-asset', 'data', `${fieldName}.x 必须是数字`);
+  }
+
+  if (typeof quat.y !== 'number') {
+    throw new ValidationError('asset-db', 'create-asset', 'data', `${fieldName}.y 必须是数字`);
+  }
+
+  if (typeof quat.z !== 'number') {
+    throw new ValidationError('asset-db', 'create-asset', 'data', `${fieldName}.z 必须是数字`);
+  }
+
+  if (typeof quat.w !== 'number') {
+    throw new ValidationError('asset-db', 'create-asset', 'data', `${fieldName}.w 必须是数字`);
   }
 }
