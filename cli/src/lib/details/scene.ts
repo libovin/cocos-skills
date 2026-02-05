@@ -313,8 +313,8 @@ export const sceneDetails: ModuleActionDetails = {
       { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
     ],
     examples: [
-      'cocos-skills scene query-node \'{"uuid": "节点UUID"}\'',
-      'cocos-skills scene query-node \'{"uuid": "根节点UUID"}\'',
+      'cocos-skills scene query-node "节点UUID"',
+      'cocos-skills scene query-node "根节点UUID"',
     ],
     notes: '返回节点的名称、位置、旋转、缩放、组件列表等信息。返回的 data 包含 __comps__ 字段，其中包含所有组件的详细信息。每个组件包含 type（组件类型）、uuid（组件 UUID）、enabled（是否启用）和 value（组件属性）',
   },
@@ -344,40 +344,44 @@ export const sceneDetails: ModuleActionDetails = {
       { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
     ],
     examples: [
-      'cocos-skills scene query-component \'{"uuid": "节点UUID"}\'',
-      'cocos-skills scene query-component \'{"uuid": "根节点UUID"}\'',
+      'cocos-skills scene query-component "节点UUID"',
+      'cocos-skills scene query-component "根节点UUID"',
     ],
-    notes: '返回组件的所有属性及其当前值',
+    notes: '返回组件的所有属性及其当前值。注意：此命令可能不可用，建议使用 query-node 获取节点组件信息（从 __comps__ 字段）',
   },
   'query-classes': {
     description: '查询可用的组件类列表',
     parameters: [
+      { name: 'extends', type: 'string', required: false, description: '基类过滤（可选），如 cc.Component、cc.Node' },
       { name: 'scriptName', type: 'string', required: false, description: '脚本名称（可选）' },
-      { name: 'component', type: 'string', required: false, description: '组件类型（可选），如 cc.Component' },
     ],
     examples: [
       'cocos-skills scene query-classes \'{}\'',
       'cocos-skills scene query-classes \'{"extends": "cc.Component"}\'',
+      'cocos-skills scene query-classes \'{"extends": "cc.Node"}\'',
+      'cocos-skills scene query-classes \'{"extends": "cc.Sprite"}\'',
+      'cocos-skills scene query-classes \'{"extends": "cc.Renderer"}\''
     ],
-    notes: '返回所有可用的组件类型。参数必须是 JSON 对象格式，可以包含可选的 scriptName 或 component 字段进行过滤。注意：此命令可能返回空数组，建议使用 query-node 获取节点组件信息',
+    notes: '返回所有可用的组件类型。参数必须是 JSON 对象格式，使用 extends 字段过滤继承自指定基类的组件类。常用的基类包括：cc.Component（所有组件）、cc.Node（节点类型）、cc.Sprite（精灵组件）等',
   },
   'query-components': {
-    description: '查询节点上的所有组件',
+    description: '查询所有可用的组件类列表',
     parameters: [],
     examples: [
       'cocos-skills scene query-components',
     ],
-    notes: '返回节点上所有组件的类型和索引信息。注意：此命令可能不可用，建议使用 query-node 获取节点组件信息（从 __comps__ 字段）',
+    notes: '返回所有可用的组件类型列表，包含内置组件和自定义脚本组件。每个组件包含 name、cid、path 等信息。与 query-classes 不同，此命令返回更详细的组件信息，包括组件的路径和资源 UUID',
   },
   'query-component-has-script': {
-    description: '查询组件是否使用了指定的脚本',
+    description: '查询节点是否有脚本组件',
     parameters: [
       { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
-      { name: 'component', type: 'string', required: true, description: '组件类型（cid），如 cc.Component' },
-      { name: 'scriptName', type: 'string', required: true, description: '脚本名称' },
     ],
-    examples: ['cocos-skills scene query-component-has-script \'{"uuid": "节点UUID", "component": "cc.Component", "scriptName": "PlayerScript"}\''],
-    notes: '检查指定组件是否使用了特定的用户脚本。注意：此命令可能不可用，建议使用 query-node 获取节点组件信息并检查 __comps__ 字段',
+    examples: [
+      'cocos-skills scene query-component-has-script "节点UUID"',
+      'cocos-skills scene query-component-has-script "根节点UUID"',
+    ],
+    notes: '返回布尔值，true 表示节点有脚本组件，false 表示没有。注意：此命令可能不可用，建议使用 query-node 获取节点组件信息并检查 __comps__ 字段',
   },
   'query-scene-bounds': {
     description: '查询场景的边界信息',
