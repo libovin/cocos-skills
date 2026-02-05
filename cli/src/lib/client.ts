@@ -7,6 +7,7 @@ import { request } from '../utils/http.js';
 import { loadServerUrl, getDefaultServerUrl, parseServerUrl } from './config.js';
 import { validateModuleAction, invalidateCache } from './validator.js';
 import { validateActionParams, hasParamValidation } from './param-validators.js';
+import { generateDefaultAssetData } from './asset-templates.js';
 import type { ApiResponse } from '../types.js';
 
 /**
@@ -17,10 +18,6 @@ export interface ClientConfig {
   timeout?: number;
   validate?: boolean;
 }
-
-/**
- * Cocos Creator HTTP Client class
- */
 export class CocosClient {
   private baseUrl: string;
   private timeout: number;
@@ -106,6 +103,15 @@ export class CocosClient {
     validate?: boolean
   ): Promise<ApiResponse> {
     const shouldValidate = validate ?? this.validate;
+
+    // Pre-process for create-asset command: generate default data if only path is provided
+    if (module === 'asset-db' && action === 'create-asset') {
+      if (params.length === 1 && typeof params[0] === 'string') {
+        const path = params[0] as string;
+        const defaultData = generateDefaultAssetData(path);
+        params = [path, defaultData];
+      }
+    }
 
     if (shouldValidate) {
       validateModuleAction(module, action, false);

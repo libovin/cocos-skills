@@ -35,6 +35,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "commander": "^14.0.3"
+    "commander": "^14.0.3",
+    "string-random": "^1.0.0",
+    "uuid": "^13.0.0"
   }
 }

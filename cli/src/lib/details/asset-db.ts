@@ -17,14 +17,16 @@ export const assetDbDetails: ModuleActionDetails = {
     description: '创建新资源文件',
     parameters: [
       { name: 'path', type: 'string', required: true, description: '资源文件路径，如 db://assets/prefabs/Test.prefab' },
-      { name: 'data', type: 'string', required: true, description: '资源数据的 JSON 字符串，包含 __type__ 和其他属性' },
+      { name: 'data', type: 'string', required: false, description: '资源数据的 JSON 字符串（可选，如未提供将根据文件扩展名自动生成默认值）' },
     ],
     examples: [
-      'cocos-skills asset-db create-asset db://assets/prefabs/Test.prefab \'"{"__type__":"cc.Prefab"}"\'',
-      'cocos-skills asset-db create-asset db://assets/scenes/NewScene.scene \'"{"__type__":"cc.SceneAsset"}"\'',
-      'cocos-skills asset-db create-asset db://assets/scripts/Game.js \'"{"__type__":"cc.Asset","content":"// game code"}"\'',
+      'cocos-skills asset-db create-asset db://assets/prefabs/Test.prefab',
+      'cocos-skills asset-db create-asset db://assets/scenes/Test.scene',
+      'cocos-skills asset-db create-asset db://assets/materials/Test.mtl',
+      'cocos-skills asset-db create-asset db://assets/physics/Test.pmtl',
+      'cocos-skills asset-db create-asset db://assets/animations/Test.anim',
     ],
-    notes: 'data 参数必须是 JSON 字符串类型（注意外层需要引号包裹）。常用类型: cc.Prefab, cc.SceneAsset, cc.Asset。创建的资源初始状态为 invalid，需要填充正确的数据后重新导入',
+    notes: 'path 参数是必需的，data 参数是可选的。如果未提供 data 参数，系统会根据文件扩展名自动生成默认的 JSON 数据。支持的文件类型：\n- Prefab (.prefab) 和 Scene (.scene)：自动生成数组格式\n- Material (.material, .mtl)、PhysicsMaterial (.pmtl)、AnimationClip (.anim)、AnimationMask (.animask)、SpriteAtlas (.pac)、LabelAtlas (.labelatlas)：自动生成对象格式\n- 其他未知后缀名：生成通用 cc.Asset 对象\n创建的资源初始状态为 invalid，需要填充正确的数据后重新导入',
   },
   'import-asset': {
     description: '导入外部资源到项目',

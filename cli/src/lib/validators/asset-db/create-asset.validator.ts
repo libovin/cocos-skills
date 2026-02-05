@@ -7,30 +7,30 @@ import { ValidationError } from '../error.js';
 type ValidatorFunction = (data: unknown, extension: string) => void;
 
 const VALIDATORS: Map<string, ValidatorFunction> = new Map([
-  ['.prefab', (data, extension) => {
-    if (!Array.isArray(data)) {
-      throw new ValidationError('asset-db', 'create-asset', 'data', 'Prefab 文件必须使用数组格式，不能使用对象格式。正确格式: [{"__type__":"cc.Prefab",...}, {"__type__":"cc.Node",...}, {"__type__":"cc.PrefabInfo",...}]');
-    }
-    validatePrefabFormat(data as unknown[]);
-  }],
-  ['.scene', (data, extension) => {
-    if (!Array.isArray(data)) {
-      throw new ValidationError('asset-db', 'create-asset', 'data', 'Scene 文件必须使用数组格式，不能使用对象格式。正确格式: [{"__type__":"cc.SceneAsset",...}, {"__type__":"cc.Scene",...}]');
-    }
-    validateSceneFormat(data as unknown[]);
-  }],
-  ['.material', (data, extension) => {
-    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-      throw new ValidationError('asset-db', 'create-asset', 'data', 'Material 文件必须使用对象格式');
-    }
-    validateMaterialFormat(data as Record<string, unknown>);
-  }],
-  ['.mtl', (data, extension) => {
-    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-      throw new ValidationError('asset-db', 'create-asset', 'data', 'Material 文件必须使用对象格式');
-    }
-    validateMaterialFormat(data as Record<string, unknown>);
-  }],
+  // ['.prefab', (data, extension) => {
+  //   if (!Array.isArray(data)) {
+  //     throw new ValidationError('asset-db', 'create-asset', 'data', 'Prefab 文件必须使用数组格式，不能使用对象格式。正确格式: [{"__type__":"cc.Prefab",...}, {"__type__":"cc.Node",...}, {"__type__":"cc.PrefabInfo",...}]');
+  //   }
+  //   validatePrefabFormat(data as unknown[]);
+  // }],
+  // ['.scene', (data, extension) => {
+  //   if (!Array.isArray(data)) {
+  //     throw new ValidationError('asset-db', 'create-asset', 'data', 'Scene 文件必须使用数组格式，不能使用对象格式。正确格式: [{"__type__":"cc.SceneAsset",...}, {"__type__":"cc.Scene",...}]');
+  //   }
+  //   validateSceneFormat(data as unknown[]);
+  // }],
+  // ['.material', (data, extension) => {
+  //   if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+  //     throw new ValidationError('asset-db', 'create-asset', 'data', 'Material 文件必须使用对象格式');
+  //   }
+  //   validateMaterialFormat(data as Record<string, unknown>);
+  // }],
+  // ['.mtl', (data, extension) => {
+  //   if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+  //     throw new ValidationError('asset-db', 'create-asset', 'data', 'Material 文件必须使用对象格式');
+  //   }
+  //   validateMaterialFormat(data as Record<string, unknown>);
+  // }],
   ['.pmtl', (data, extension) => {
     if (typeof data !== 'object' || data === null || Array.isArray(data)) {
       throw new ValidationError('asset-db', 'create-asset', 'data', 'Physics Material 文件必须使用对象格式');
@@ -64,8 +64,8 @@ const VALIDATORS: Map<string, ValidatorFunction> = new Map([
 ]);
 
 export function validateCreateAsset(params: unknown[]): void {
-  if (params.length < 2) {
-    throw new ValidationError('asset-db', 'create-asset', 'params', '至少需要 2 个参数：path 和 data');
+  if (params.length < 1) {
+    throw new ValidationError('asset-db', 'create-asset', 'params', '至少需要 1 个参数：path（data 参数可选，如未提供将自动生成默认值）');
   }
 
   const [path, data] = params;
@@ -82,23 +82,26 @@ export function validateCreateAsset(params: unknown[]): void {
     throw new ValidationError('asset-db', 'create-asset', 'path', '必须包含文件扩展名（如 .prefab、.scene、.png）');
   }
 
-  if (typeof data !== 'string') {
-    throw new ValidationError('asset-db', 'create-asset', 'data', '必须是 JSON 字符串类型');
-  }
-
-  try {
-    const parsed = JSON.parse(data);
-    const extension = getFileExtension(path);
-
-    const validator = VALIDATORS.get(extension);
-    if (validator) {
-      validator(parsed, extension);
+  // If data is provided, validate it
+  if (data !== undefined) {
+    if (typeof data !== 'string') {
+      throw new ValidationError('asset-db', 'create-asset', 'data', '必须是 JSON 字符串类型');
     }
-  } catch (e) {
-    if (e instanceof ValidationError) {
-      throw e;
+
+    try {
+      const parsed = JSON.parse(data);
+      const extension = getFileExtension(path);
+
+      const validator = VALIDATORS.get(extension);
+      if (validator) {
+        validator(parsed, extension);
+      }
+    } catch (e) {
+      if (e instanceof ValidationError) {
+        throw e;
+      }
+      throw new ValidationError('asset-db', 'create-asset', 'data', '必须是有效的 JSON 字符串');
     }
-    throw new ValidationError('asset-db', 'create-asset', 'data', '必须是有效的 JSON 字符串');
   }
 }
 
