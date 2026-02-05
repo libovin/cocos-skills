@@ -221,7 +221,7 @@ export function generateDefaultAssetData(path: string): string {
           "y": -194.909,
           "z": 38.562
         },
-        "_id": "c0y6F5f+pAvI805TdmxIjx"
+        // "_id": "c0y6F5f+pAvI805TdmxIjx"
       },
       {
         "__type__": "cc.DirectionalLight",
@@ -247,6 +247,7 @@ export function generateDefaultAssetData(path: string): string {
         "_illuminanceHDR": 65000,
         "_illuminance": 65000,
         "_illuminanceLDR": 1.6927083333333335,
+        // "_id": "597uMYCbhEtJQc0ffJlcgA"
       },
       {
         "__type__": "cc.StaticLightSettings",
@@ -296,6 +297,7 @@ export function generateDefaultAssetData(path: string): string {
           "y": -45,
           "z": 0
         },
+        // "_id": "c9DMICJLFO5IeO07EPon7U"
       },
       {
         "__type__": "cc.Camera",
@@ -336,6 +338,7 @@ export function generateDefaultAssetData(path: string): string {
         "_screenScale": 1,
         "_visibility": 1822425087,
         "_targetTexture": null,
+        // "_id": "7dWQTpwS5LrIHnc1zAPUtf"
       },
       {
         "__type__": "cc.SceneGlobals",
