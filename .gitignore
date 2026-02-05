@@ -24,3 +24,10 @@ coverage/
 # Temporary files
 *.tmp
 .temp/
+.opencode
+.ruff_cache
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo

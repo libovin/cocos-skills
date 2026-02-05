@@ -151,6 +151,36 @@ execute("asset-db", "import-asset", ["/path/to/image.png", "db://assets/textures
 
 # 生成可用 URL
 execute("asset-db", "generate-available-url", ["db://assets/newTexture.png"])
+
+# 创建预制体（必须使用数组格式）
+import json
+
+prefab_array = [
+  {
+    "__type__": "cc.Prefab",
+    "_name": "MyPrefab",
+    "data": {"__id__": 1}
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "MyNode",
+    "_components": [{"__id__": 2}],
+    "_prefab": {"__id__": 3}
+  },
+  {
+    "__type__": "cc.UITransform",
+    "node": {"__id__": 1}
+  },
+  {
+    "__type__": "cc.PrefabInfo",
+    "root": {"__id__": 1}
+  }
+]
+
+execute("asset-db", "create-asset", [
+  "db://assets/prefabs/MyPrefab.prefab",
+  json.dumps(prefab_array)
+])
 ```
 
 ### 资源管理
@@ -212,3 +242,4 @@ execute("asset-db", "save-asset-meta", ["db://assets/textures/hero.png", {"textu
 3. **依赖刷新**: 重新导入资源会刷新资源的所有依赖关系
 4. **路径格式**: 所有资源 URL 使用 `db://assets/` 格式
 5. **UUID 获取**: 通过 `query-uuid` 可以从 URL 获取资源的 UUID
+6. **预制体格式**: 创建预制体（.prefab）必须使用**数组格式**，不是单个对象。详见 [预制体创建指南](references/asset-creation.md#预制体创建指南)
