@@ -92,12 +92,10 @@ export const ACTION_DESCRIPTIONS: Record<string, Record<string, string>> = {
     // 查询
     'query-is-ready': '查询场景是否准备就绪',
     'query-node': '查询节点信息',
-    'query-component': '查询组件信息',
     'query-node-tree': '查询场景节点树',
     'query-nodes-by-asset-uuid': '查询使用指定资源的节点',
     'query-dirty': '查询场景是否已修改',
     'query-classes': '查询可用组件类',
-    'query-components': '查询节点上的组件',
     'query-component-has-script': '查询组件是否指定脚本',
     'query-scene-bounds': '查询场景边界',
     'is-native': '查询是否为原生对象',

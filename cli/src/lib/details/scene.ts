@@ -49,62 +49,99 @@ export const sceneDetails: ModuleActionDetails = {
   'set-property': {
     description: '设置节点或组件属性值',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '节点路径，从根节点开始，如 /Canvas/Sprite' },
-      { name: 'component', type: 'string', required: false, description: '组件名称（可选），如 cc.Sprite。不填则修改节点属性' },
-      { name: 'property', type: 'string', required: true, description: '属性路径，支持嵌套，如 color、size.width、position.x' },
-      { name: 'value', type: 'any', required: true, description: '新值，支持字符串、数字、JSON 对象等' },
+      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
+      { name: 'path', type: 'string', required: true, description: '属性路径。节点属性直接使用属性名（如 position、rotation、scale），组件属性使用 __comps__.索引.属性名（如 __comps__.0._color、__comps__.1._contentSize）' },
+      { name: 'dump', type: 'object', required: true, description: '属性值对象，必须包含 value 和 type 字段。例如：{"value": {"r":255,"g":0,"b":0,"a":255}, "type": "cc.Color"}' },
     ],
     examples: [
-      'cocos-skills scene set-property /Canvas/Sprite "" color \'{"r":255,"g":0,"b":0,"a":255}\'',
-      'cocos-skills scene set-property /Canvas/Sprite cc.Sprite size.width 100',
-      'cocos-skills scene set-property /Camera "" position \'{"x":0,"y":0,"z":10}\'',
-      'cocos-skills scene set-property /Canvas/Label cc.Label string "Hello World"',
-      'cocos-skills scene set-property /Canvas/Button "" active true',
+      'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "position", "dump": {"value": {"x":0,"y":0,"z":10}, "type": "cc.Vec3"}}\'',
+      'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "rotation", "dump": {"value": {"x":0,"y":0,"z":0,"w":1}, "type": "cc.Quat"}}\'',
+      'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "scale", "dump": {"value": {"x":1,"y":1,"z":1}, "type": "cc.Vec3"}}\'',
+      'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "__comps__.0._color", "dump": {"value": {"r":255,"g":0,"b":0,"a":255}, "type": "cc.Color"}}\'',
+      'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "__comps__.1._contentSize", "dump": {"value": {"width":200,"height":200}, "type": "cc.Size"}}\'',
     ],
-    notes: '属性路径支持嵌套，使用点号分隔。对于不存在的属性会返回错误。颜色使用 {r,g,b,a} 格式，范围 0-255',
+    notes: `参数必须是 JSON 对象格式，包含 uuid、path 和 dump 字段。dump 必须包含 value 和 type 字段。
+
+路径格式说明：
+- 节点属性：直接使用属性名，如 position、rotation、scale、eulerAngles、angle
+- 组件属性：使用 __comps__.索引.属性名 格式，如 __comps__.0._color、__comps__.1._contentSize
+- 组件索引从 0 开始，需要先使用 query-node 获取组件列表
+
+支持的 type 类型：
+- cc.Vec3: 三维向量，用于 position、scale 等，格式 {"x":0,"y":0,"z":0}
+- cc.Quat: 四元数，用于 rotation，格式 {"x":0,"y":0,"z":0,"w":1}
+- cc.Vec2: 二维向量，格式 {"x":0,"y":0}
+- cc.Color: 颜色，格式 {"r":255,"g":0,"b":0,"a":255}，范围 0-255
+- cc.Size: 尺寸，格式 {"width":100,"height":100}
+- cc.Node: 节点引用，格式 {"uuid":"节点UUID"}
+- cc.String: 字符串
+- cc.Number: 数字
+- cc.Boolean: 布尔值
+- cc.Asset: 资源引用，格式 {"uuid":"资源UUID"}
+- cc.SpriteFrame: 精灵帧引用
+- cc.Material: 材质引用
+- cc.Prefab: 预制体引用
+- cc.Texture2D: 纹理引用
+- cc.Font: 字体引用
+- cc.AudioClip: 音频片段引用
+
+常用节点属性示例：
+- position: 节点位置
+- rotation: 节点旋转（四元数）
+- scale: 节点缩放
+- eulerAngles: 欧拉角旋转
+- angle: 二维旋转角度
+
+常用组件属性示例：
+- cc.Sprite._color: 精灵颜色
+- cc.Sprite.spriteFrame: 精灵帧
+- cc.UITransform._contentSize: 内容尺寸
+- cc.UITransform._anchorPoint: 锚点
+- cc.Label.string: 文本内容
+- cc.Label.fontSize: 字体大小
+
+重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新`,
   },
   'reset-property': {
     description: '重置属性为默认值',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '节点路径' },
-      { name: 'component', type: 'string', required: false, description: '组件名称（可选）' },
-      { name: 'property', type: 'string', required: true, description: '要重置的属性路径' },
+      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
+      { name: 'path', type: 'string', required: true, description: '属性路径' },
+      { name: 'dump', type: 'any', required: true, description: '属性值（通常为 null 或 undefined）' },
     ],
     examples: [
-      'cocos-skills scene reset-property /Canvas/Sprite "" color',
-      'cocos-skills scene reset-property /Canvas/Sprite cc.Sprite size.width',
-      'cocos-skills scene reset-property /Camera "" position',
+      'cocos-skills scene reset-property \'{"uuid": "节点UUID", "path": "color", "dump": null}\'',
+      'cocos-skills scene reset-property \'{"uuid": "节点UUID", "path": "size.width", "dump": null}\'',
+      'cocos-skills scene reset-property \'{"uuid": "节点UUID", "path": "position", "dump": null}\'',
     ],
-    notes: '将属性恢复为引擎默认值，通常用于清除自定义设置',
+    notes: '将属性恢复为引擎默认值，通常用于清除自定义设置。参数必须是 JSON 对象格式，包含 uuid、path 和 dump 字段。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
   },
   'move-array-element': {
     description: '移动数组元素位置',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '节点路径' },
-      { name: 'component', type: 'string', required: false, description: '组件名称（可选）' },
-      { name: 'property', type: 'string', required: true, description: '数组属性路径，如 children' },
-      { name: 'fromIndex', type: 'number', required: true, description: '源索引位置（从 0 开始）' },
-      { name: 'toIndex', type: 'number', required: true, description: '目标索引位置' },
+      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
+      { name: 'path', type: 'string', required: true, description: '数组属性路径，如 children' },
+      { name: 'target', type: 'number', required: true, description: '目标索引位置' },
+      { name: 'offset', type: 'number', required: true, description: '偏移量' },
     ],
     examples: [
-      'cocos-skills scene move-array-element /Canvas "" children 0 5',
-      'cocos-skills scene move-array-element /Container/List "" children 3 1',
+      'cocos-skills scene move-array-element \'{"uuid": "节点UUID", "path": "children", "target": 5, "offset": 0}\'',
+      'cocos-skills scene move-array-element \'{"uuid": "节点UUID", "path": "children", "target": 1, "offset": 3}\'',
     ],
-    notes: '常用于调整子节点顺序或数组元素顺序。索引超出范围时会报错',
+    notes: '常用于调整子节点顺序或数组元素顺序。参数必须是 JSON 对象格式。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
   },
   'remove-array-element': {
     description: '删除数组元素',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '节点路径' },
-      { name: 'component', type: 'string', required: false, description: '组件名称（可选）' },
-      { name: 'property', type: 'string', required: true, description: '数组属性路径' },
+      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
+      { name: 'path', type: 'string', required: true, description: '数组属性路径' },
       { name: 'index', type: 'number', required: true, description: '要删除的索引位置' },
     ],
     examples: [
-      'cocos-skills scene remove-array-element /Canvas "" children 0',
-      'cocos-skills scene remove-array-element /UI/Layout cc.Layout.targets 2',
+      'cocos-skills scene remove-array-element \'{"uuid": "节点UUID", "path": "children", "index": 0}\'',
+      'cocos-skills scene remove-array-element \'{"uuid": "节点UUID", "path": "children", "index": 2}\'',
     ],
-    notes: '删除指定索引的数组元素。后续元素会自动前移',
+    notes: '删除指定索引的数组元素。后续元素会自动前移。参数必须是 JSON 对象格式。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
   },
   'copy-node': {
     description: '复制节点到剪贴板',
@@ -134,7 +171,7 @@ export const sceneDetails: ModuleActionDetails = {
       'cocos-skills scene paste-node /Canvas',
       'cocos-skills scene paste-node /UI/Container',
     ],
-    notes: '将剪贴板中的节点粘贴为指定父节点的子节点。需要先使用 copy-node 或 cut-node',
+    notes: '将剪贴板中的节点粘贴为指定父节点的子节点。需要先使用 copy-node 或 cut-node。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
   },
   'cut-node': {
     description: '剪切节点',
@@ -156,23 +193,25 @@ export const sceneDetails: ModuleActionDetails = {
       'cocos-skills scene set-parent /Canvas/Sprite /Container 0',
       'cocos-skills scene set-parent /OldParent/Child /NewParent',
     ],
-    notes: '改变节点的层级关系。会保留节点的世界变换（如果可能）',
+    notes: '改变节点的层级关系。会保留节点的世界变换（如果可能）。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
   },
   'create-node': {
     description: '创建新节点',
     parameters: [
-      { name: 'parentPath', type: 'string', required: true, description: '父节点路径' },
+      { name: 'parent', type: 'string', required: false, description: '父节点 UUID 或路径（可选）' },
       { name: 'name', type: 'string', required: false, description: '节点名称（可选），不指定时自动生成' },
-      { name: 'componentType', type: 'string', required: false, description: '组件类型（可选），如 cc.Sprite、cc.Label' },
+      { name: 'type', type: 'string', required: false, description: '组件类型（可选），如 cc.Sprite、cc.Label' },
+      { name: 'position', type: 'object', required: false, description: '节点位置（可选），格式: {x, y, z}' },
     ],
     examples: [
-      'cocos-skills scene create-node /Canvas NewNode',
-      'cocos-skills scene create-node /Canvas Sprite cc.Sprite',
-      'cocos-skills scene create-node /Camera "" "cc.Camera"',
-      'cocos-skills scene create-node /UI Button',
-      'cocos-skills scene create-node /UI Label "cc.Label"',
+      'cocos-skills scene create-node \'{"parent": "/Canvas", "name": "NewNode"}\'',
+      'cocos-skills scene create-node \'{"parent": "/Canvas", "name": "Sprite", "type": "cc.Sprite"}\'',
+      'cocos-skills scene create-node \'{"parent": "/Camera", "name": "CameraNode", "type": "cc.Camera"}\'',
+      'cocos-skills scene create-node \'{"parent": "/UI", "name": "Button"}\'',
+      'cocos-skills scene create-node \'{"parent": "/UI", "name": "Label", "type": "cc.Label"}\'',
+      'cocos-skills scene create-node \'{"parent": "/Node", "name": "Child", "position": {"x": 100, "y": 200, "z": 0}}\'',
     ],
-    notes: '不指定名称时自动生成（如 New Node）。可以同时添加组件。常用组件: cc.Sprite, cc.Label, cc.Button, cc.Widget',
+    notes: '参数必须是 JSON 对象格式。不指定名称时自动生成（如 New Node）。可以同时添加组件。常用组件: cc.Sprite, cc.Label, cc.Button, cc.Widget。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
   },
   'remove-node': {
     description: '删除节点及其所有子节点',
@@ -183,7 +222,7 @@ export const sceneDetails: ModuleActionDetails = {
       'cocos-skills scene remove-node /Canvas/OldNode',
       'cocos-skills scene remove-node /TempNode',
     ],
-    notes: '此操作不可撤销。会删除节点及其所有子节点。建议删除前确认无引用',
+    notes: '此操作不可撤销。会删除节点及其所有子节点。建议删除前确认无引用。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
   },
   'reset-node': {
     description: '重置节点变换为默认值',
@@ -194,7 +233,7 @@ export const sceneDetails: ModuleActionDetails = {
       'cocos-skills scene reset-node /Canvas/Sprite',
       'cocos-skills scene reset-node /Camera',
     ],
-    notes: '将 position 重置为 (0,0,0)，rotation 重置为 (0,0,0)，scale 重置为 (1,1,1)',
+    notes: '将 position 重置为 (0,0,0)，rotation 重置为 (0,0,0)，scale 重置为 (1,1,1)。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
   },
   'reset-component': {
     description: '重置组件属性为默认值',
@@ -219,78 +258,65 @@ export const sceneDetails: ModuleActionDetails = {
   'create-component': {
     description: '添加组件到节点',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '节点路径' },
-      { name: 'componentType', type: 'string', required: true, description: '组件类型，如 cc.Sprite、cc.Widget' },
+      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
+      { name: 'component', type: 'string', required: true, description: '组件类型，如 cc.Sprite、cc.Widget' },
     ],
     examples: [
-      'cocos-skills scene create-component /Canvas/Sprite cc.Widget',
-      'cocos-skills scene create-component /Camera cc.Camera',
-      'cocos-skills scene create-component /UI/Button cc.Animation',
+      'cocos-skills scene create-component \'{"uuid": "节点UUID", "component": "cc.Widget"}\'',
+      'cocos-skills scene create-component \'{"uuid": "节点UUID", "component": "cc.Camera"}\'',
+      'cocos-skills scene create-component \'{"uuid": "节点UUID", "component": "cc.Animation"}\'',
     ],
-    notes: '为节点添加指定类型的组件。一个节点可以有多个组件，但每种类型只能有一个（除了 cc.Component）',
+    notes: '参数必须是 JSON 对象格式，包含 uuid 和 component 字段。为节点添加指定类型的组件。一个节点可以有多个组件，但每种类型只能有一个（除了 cc.Component）。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
   },
   'remove-component': {
     description: '从节点移除组件',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '节点路径' },
-      { name: 'component', type: 'string', required: true, description: '组件类型或索引' },
+      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
+      { name: 'component', type: 'string', required: true, description: '组件类型（cid），如 cc.Sprite、cc.Widget' },
     ],
     examples: [
-      'cocos-skills scene remove-component /Canvas/Sprite cc.Widget',
-      'cocos-skills scene remove-component /UI/Box cc.BoxCollider',
+      'cocos-skills scene remove-component \'{"uuid": "节点UUID", "component": "cc.Widget"}\'',
+      'cocos-skills scene remove-component \'{"uuid": "节点UUID", "component": "cc.BoxCollider2D"}\'',
     ],
-    notes: '移除指定组件。注意：移除组件可能会影响节点功能',
+    notes: '移除指定组件。component 参数使用组件类型（cid），如 cc.Sprite、cc.Widget。注意：移除组件可能会影响节点功能。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新。注意：在某些情况下，remove-component 命令可能不会立即生效，或者无法移除组件。如果遇到这种情况，请尝试在 Cocos Creator 编辑器中手动移除组件',
   },
   'execute-component-method': {
     description: '调用组件的方法',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '节点路径' },
-      { name: 'component', type: 'string', required: true, description: '组件名称' },
+      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
+      { name: 'component', type: 'string', required: true, description: '组件类型（cid），如 cc.Sprite、cc.Label' },
       { name: 'method', type: 'string', required: true, description: '方法名称' },
       { name: 'args', type: 'array', required: false, description: '方法参数数组（可选）' },
     ],
     examples: [
-      'cocos-skills scene execute-component-method /Canvas/Player PlayerScript jump',
-      'cocos-skills scene execute-component-method /Canvas/Label cc.Label string "Hello World"',
-      'cocos-skills scene execute-component-method /Sprite cc.Sprite setContentSize \'[100, 100]\'',
+      'cocos-skills scene execute-component-method \'{"uuid": "节点UUID", "component": "cc.Sprite", "method": "setContentSize", "args": [100, 100]}\'',
+      'cocos-skills scene execute-component-method \'{"uuid": "节点UUID", "component": "cc.Label", "method": "string", "args": ["Hello World"]}\'',
     ],
-    notes: '动态调用组件的公共方法。参数必须是有效的 JSON 格式',
+    notes: '动态调用组件的公共方法。component 参数使用组件类型（cid），如 cc.Sprite、cc.Label。args 参数是方法参数数组，如 [100, 100] 或 ["Hello World"]',
   },
   'execute-scene-script': {
     description: '在场景上下文中执行 JavaScript 脚本',
     parameters: [
-      { name: 'script', type: 'string', required: true, description: '要执行的 JavaScript 代码' },
+      { name: 'name', type: 'string', required: true, description: '脚本名称（通常为 cocos-mcp-server）' },
+      { name: 'method', type: 'string', required: true, description: '方法名称' },
+      { name: 'args', type: 'array', required: false, description: '方法参数数组（可选）' },
     ],
     examples: [
-      'cocos-skills scene execute-scene-script "console.log(\'Hello\')"',
-      'cocos-skills scene execute-scene-script "cc.find(\'Canvas\').active = false"',
-      'cocos-skills scene execute-scene-script "director.loadScene(\'Main\')"',
+      'cocos-skills scene execute-scene-script \'{"name": "cocos-mcp-server", "method": "getNodeInfo", "args": ["节点UUID"]}\'',
+      'cocos-skills scene execute-scene-script \'{"name": "cocos-mcp-server", "method": "addComponentToNode", "args": ["节点UUID", "cc.Sprite"]}\'',
     ],
-    notes: '在编辑器场景上下文中执行 JavaScript 代码，可用于复杂的批量操作或调试',
+    notes: '在编辑器场景上下文中执行 JavaScript 脚本方法。需要先在场景中注册相应的脚本方法。常用于复杂的批量操作或调试',
   },
   'query-node': {
     description: '查询节点的详细信息',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '节点路径' },
+      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
     ],
     examples: [
-      'cocos-skills scene query-node /Canvas/Sprite',
-      'cocos-skills scene query-node /',
-      'cocos-skills scene query-node /Camera',
+      'cocos-skills scene query-node \'{"uuid": "节点UUID"}\'',
+      'cocos-skills scene query-node \'{"uuid": "根节点UUID"}\'',
     ],
-    notes: '返回节点的名称、位置、旋转、缩放、组件列表等信息。路径 / 表示根节点',
-  },
-  'query-component': {
-    description: '查询组件的详细信息',
-    parameters: [
-      { name: 'path', type: 'string', required: true, description: '节点路径' },
-      { name: 'component', type: 'string', required: true, description: '组件名称或索引（从 0 开始）' },
-    ],
-    examples: [
-      'cocos-skills scene query-component /Canvas/Sprite cc.Sprite',
-      'cocos-skills scene query-component /Canvas/Label 0',
-    ],
-    notes: '返回组件的所有属性及其当前值',
+    notes: '返回节点的名称、位置、旋转、缩放、组件列表等信息。返回的 data 包含 __comps__ 字段，其中包含所有组件的详细信息。每个组件包含 type（组件类型）、uuid（组件 UUID）、enabled（是否启用）和 value（组件属性）',
   },
   'query-node-tree': {
     description: '查询场景的完整节点树结构',
@@ -312,38 +338,46 @@ export const sceneDetails: ModuleActionDetails = {
     examples: ['cocos-skills scene query-dirty'],
     notes: '返回布尔值，true 表示场景有未保存的更改',
   },
+  'query-component': {
+    description: '查询组件的详细信息',
+    parameters: [
+      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
+    ],
+    examples: [
+      'cocos-skills scene query-component \'{"uuid": "节点UUID"}\'',
+      'cocos-skills scene query-component \'{"uuid": "根节点UUID"}\'',
+    ],
+    notes: '返回组件的所有属性及其当前值',
+  },
   'query-classes': {
     description: '查询可用的组件类列表',
     parameters: [
-      { name: 'baseClass', type: 'string', required: false, description: '基类过滤（可选），如 cc.Component' },
+      { name: 'scriptName', type: 'string', required: false, description: '脚本名称（可选）' },
+      { name: 'component', type: 'string', required: false, description: '组件类型（可选），如 cc.Component' },
     ],
     examples: [
-      'cocos-skills scene query-classes',
-      'cocos-skills scene query-classes cc.Component',
-      'cocos-skills scene query-classes cc.RenderComponent',
+      'cocos-skills scene query-classes \'{}\'',
+      'cocos-skills scene query-classes \'{"extends": "cc.Component"}\'',
     ],
-    notes: '返回所有可用的组件类型。可用于查询支持的组件列表',
+    notes: '返回所有可用的组件类型。参数必须是 JSON 对象格式，可以包含可选的 scriptName 或 component 字段进行过滤。注意：此命令可能返回空数组，建议使用 query-node 获取节点组件信息',
   },
   'query-components': {
     description: '查询节点上的所有组件',
-    parameters: [
-      { name: 'path', type: 'string', required: true, description: '节点路径' },
-    ],
+    parameters: [],
     examples: [
-      'cocos-skills scene query-components /Canvas/Sprite',
-      'cocos-skills scene query-components /Camera',
+      'cocos-skills scene query-components',
     ],
-    notes: '返回节点上所有组件的类型和索引信息',
+    notes: '返回节点上所有组件的类型和索引信息。注意：此命令可能不可用，建议使用 query-node 获取节点组件信息（从 __comps__ 字段）',
   },
   'query-component-has-script': {
     description: '查询组件是否使用了指定的脚本',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '节点路径' },
-      { name: 'component', type: 'string', required: true, description: '组件名称' },
+      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
+      { name: 'component', type: 'string', required: true, description: '组件类型（cid），如 cc.Component' },
       { name: 'scriptName', type: 'string', required: true, description: '脚本名称' },
     ],
-    examples: ['cocos-skills scene query-component-has-script /Canvas/Player cc.Component PlayerScript'],
-    notes: '检查指定组件是否使用了特定的用户脚本',
+    examples: ['cocos-skills scene query-component-has-script \'{"uuid": "节点UUID", "component": "cc.Component", "scriptName": "PlayerScript"}\''],
+    notes: '检查指定组件是否使用了特定的用户脚本。注意：此命令可能不可用，建议使用 query-node 获取节点组件信息并检查 __comps__ 字段',
   },
   'query-scene-bounds': {
     description: '查询场景的边界信息',
