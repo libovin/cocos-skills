@@ -310,13 +310,13 @@ export const sceneDetails: ModuleActionDetails = {
   'query-node': {
     description: '查询节点的详细信息',
     parameters: [
-      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
+      { name: 'uuid', type: 'string', required: true, description: '节点 UUID。可以通过以下方式获取：1) 使用 query-node-tree 命令查看场景节点树，每个节点都包含 uuid 字段；2) 在 Cocos Creator 编辑器中选中节点，在属性检查器中可以看到节点的 UUID；3) 使用 query-nodes-by-asset-uuid 命令查找使用特定资源的节点' },
     ],
     examples: [
       'cocos-skills scene query-node "节点UUID"',
       'cocos-skills scene query-node "根节点UUID"',
     ],
-    notes: '返回节点的名称、位置、旋转、缩放、组件列表等信息。返回的 data 包含 __comps__ 字段，其中包含所有组件的详细信息。每个组件包含 type（组件类型）、uuid（组件 UUID）、enabled（是否启用）和 value（组件属性）',
+    notes: '返回节点的详细信息，包括：\n- 基本属性：name（名称）、active（是否激活）、locked（是否锁定）、type（类型）、path（路径）\n- 变换属性：position（位置）、rotation（旋转）、scale（缩放）\n- 组件信息：__comps__ 字段包含所有组件的详细信息，每个组件包含 type（组件类型）、uuid（组件 UUID）、enabled（是否启用）、value（组件属性值）和 extends（继承的类）\n- 预制体信息：prefab 字段包含预制体状态信息\n- 父节点信息：parent 字段包含父节点的 UUID',
   },
   'query-node-tree': {
     description: '查询场景的完整节点树结构',
@@ -327,10 +327,12 @@ export const sceneDetails: ModuleActionDetails = {
   'query-nodes-by-asset-uuid': {
     description: '查询所有使用指定资源的节点',
     parameters: [
-      { name: 'uuid', type: 'string', required: true, description: '资源的 UUID' },
+      { name: 'uuid', type: 'string', required: true, description: '资源的 UUID。可以通过以下方式获取：1) 使用 asset-db query-asset-info 命令查询资源信息；2) 在 Cocos Creator 编辑器中选中资源，在属性检查器中可以看到资源的 UUID；3) 使用 asset-db query-assets 命令列出所有资源' },
     ],
-    examples: ['cocos-skills scene query-nodes-by-asset-uuid "uuid-string-here"'],
-    notes: '返回所有引用该资源的节点列表，常用于查找资源使用情况',
+    examples: [
+      'cocos-skills scene query-nodes-by-asset-uuid "资源UUID"',
+    ],
+    notes: '返回所有引用该资源的节点 UUID 列表。常用于查找资源使用情况、删除未使用的资源、重构项目时追踪资源依赖关系。如果返回空数组，说明该资源在当前场景中未被使用。注意：此命令只查询当前打开的场景中的节点，不会查询其他场景或预制体中的使用情况',
   },
   'query-dirty': {
     description: '查询场景是否有未保存的修改',
