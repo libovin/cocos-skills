@@ -198,20 +198,14 @@ export const sceneDetails: ModuleActionDetails = {
   'create-node': {
     description: '创建新节点',
     parameters: [
-      { name: 'parent', type: 'string', required: false, description: '父节点 UUID 或路径（可选）' },
-      { name: 'name', type: 'string', required: false, description: '节点名称（可选），不指定时自动生成' },
-      { name: 'type', type: 'string', required: false, description: '组件类型（可选），如 cc.Sprite、cc.Label' },
-      { name: 'position', type: 'object', required: false, description: '节点位置（可选），格式: {x, y, z}' },
+      { name: 'options', type: 'object', required: true, description: '节点配置对象，包含 parent, name 等属性' },
     ],
     examples: [
-      'cocos-skills scene create-node \'{"parent": "/Canvas", "name": "NewNode"}\'',
-      'cocos-skills scene create-node \'{"parent": "/Canvas", "name": "Sprite", "type": "cc.Sprite"}\'',
-      'cocos-skills scene create-node \'{"parent": "/Camera", "name": "CameraNode", "type": "cc.Camera"}\'',
-      'cocos-skills scene create-node \'{"parent": "/UI", "name": "Button"}\'',
-      'cocos-skills scene create-node \'{"parent": "/UI", "name": "Label", "type": "cc.Label"}\'',
-      'cocos-skills scene create-node \'{"parent": "/Node", "name": "Child", "position": {"x": 100, "y": 200, "z": 0}}\'',
+      'cocos-skills scene create-node \'{"name": "NewNode"}\'',
+      'cocos-skills scene create-node \'{"parent": "节点UUID", "name": "ChildNode"}\'',
+      'cocos-skills scene create-node \'{"parent": "节点UUID", "name": "SubNode"}\'',
     ],
-    notes: '参数必须是 JSON 对象格式。不指定名称时自动生成（如 New Node）。可以同时添加组件。常用组件: cc.Sprite, cc.Label, cc.Button, cc.Widget。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
+    notes: '参数必须是 JSON 对象格式。options 包含: parent(父节点UUID，不指定时添加到场景根节点), name(节点名称)。不指定名称时自动生成（如 New Node）。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
   },
   'remove-node': {
     description: '删除节点及其所有子节点',
