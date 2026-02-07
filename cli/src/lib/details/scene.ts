@@ -201,11 +201,12 @@ export const sceneDetails: ModuleActionDetails = {
       { name: 'options', type: 'object', required: true, description: '节点配置对象，包含 parent, name 等属性' },
     ],
     examples: [
+      'cocos-skills scene create-node \'{}\'',
       'cocos-skills scene create-node \'{"name": "NewNode"}\'',
+      'cocos-skills scene create-node \'{"parent": "节点UUID"}\'',
       'cocos-skills scene create-node \'{"parent": "节点UUID", "name": "ChildNode"}\'',
-      'cocos-skills scene create-node \'{"parent": "节点UUID", "name": "SubNode"}\'',
     ],
-    notes: '参数必须是 JSON 对象格式。options 包含: parent(父节点UUID，不指定时添加到场景根节点), name(节点名称)。不指定名称时自动生成（如 New Node）。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
+    notes: '参数必须是 JSON 对象格式。options 包含: parent(父节点UUID，不指定时添加到场景根节点), name(节点名称，不指定时自动生成如 New Node)。默认值: 位置(0,0,0), 旋转(0,0,0), 缩放(1,1,1), 组件(空数组)。注意: type 和 position 参数在验证器中支持但服务器端未实现，不会生效。如需添加组件，请使用 create-component 命令。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
   },
   'remove-node': {
     description: '删除节点及其所有子节点',

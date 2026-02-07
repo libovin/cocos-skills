@@ -28,49 +28,38 @@ Cocos Creator 自动化操作技能包，提供与 Cocos Creator 编辑器 HTTP 
 
 ## 快速开始
 
-### 连接测试
+### CLI 使用
 
-```python
-from scripts.client import health_check
-health_check()
-```
-
-### 场景操作
-
-```python
-from scripts.client import execute
-
-# 获取当前场景
-execute("scene", "query-is-ready")
+```bash
+# 连接测试
+cocos-skills scene query-is-ready
 
 # 打开场景
-execute("scene", "open-scene", ["db://assets/scenes/Main.scene"])
+cocos-skills scene open-scene db://assets/scenes/Main.scene
 
 # 查询节点树
-execute("scene", "query-node-tree")
+cocos-skills scene query-node-tree
 ```
 
 ### API 使用模式
 
-所有模块操作都使用统一的 API:
+使用 CLI 调用所有模块操作:
 
-```python
-from scripts.client import execute
-
+```bash
 # 基本语法
-execute("模块名", "操作名", [参数1, 参数2, ...])
+cocos-skills <模块名> <操作名> [参数...]
 
 # 示例：资源数据库操作
-execute("asset-db", "create-asset", ["db://assets/data/config.json", '{"key": "value"}'])
-execute("asset-db", "query-asset-info", ["db://assets/textures/hero.png"])
+cocos-skills asset-db create-asset db://assets/data/config.json
+cocos-skills asset-db query-asset-info db://assets/textures/hero.png
 
 # 示例：场景操作
-execute("scene", "create-node", ["Canvas/NewNode"])
-execute("scene", "set-property", ["node-uuid", "position", {"x": 100, "y": 100}])
+cocos-skills scene create-node '{"parent":"Canvas","name":"NewNode"}'
+cocos-skills scene set-property node-uuid position '{"x":100,"y":100}'
 
 # 示例：项目配置
-execute("project", "open-settings")
-execute("project", "query-config", ["general"])
+cocos-skills project open-settings
+cocos-skills project query-config general
 ```
 
 ## 项目结构
@@ -91,19 +80,20 @@ cocos-skill/
 │   ├── project/                       # 项目管理 (project)
 │   ├── scene/                         # 场景管理 (scene)
 │   └── server/                        # 服务器管理 (server)
-└── scripts/
-    └── client.py                      # HTTP 客户端
+└── cli/                               # TypeScript CLI 实现
+    └── src/
+        └── lib/
+            └── client.ts              # HTTP 客户端
 ```
 
-## 全局函数
+## 全局命令
 
-| 函数 | 功能 | 使用场景 |
+| 命令 | 功能 | 使用场景 |
 |------|------|----------|
-| `health_check()` | 健康检查 | 连接诊断 |
-| `get_status()` | 获取状态 | 状态查询 |
-| `get_modules()` | 获取模块列表 | API 探索 |
-| `get_module_actions(module)` | 获取模块操作 | 操作查询 |
-| `execute(module, action, params)` | 执行 API 调用 | 通用执行器 |
+| `cocos-skills scene query-is-ready` | 健康检查 | 连接诊断 |
+| `cocos-skills server query-ip-list` | 获取状态 | 状态查询 |
+| `cocos-skills <module> --help` | 获取模块列表 | API 探索 |
+| `cocos-skills <module> <action> --help` | 获取操作详情 | 操作查询 |
 
 ## 连接配置
 
@@ -121,8 +111,3 @@ cocos-skill/
 ```
 
 默认连接地址：`http://127.0.0.1:54321`
-
-## 依赖项
-
-- Python 3.8+
-- urllib (标准库)

@@ -1,7 +1,7 @@
 {
   "name": "cocos-skills",
   "version": "1.0.0",
-  "description": "Cocos Creator HTTP API CLI Tool - TypeScript port of Python scripts",
+  "description": "Cocos Creator HTTP API CLI Tool - TypeScript CLI for Cocos Creator editor automation",
   "type": "module",
   "bin": {
     "cocos-skills": "./cli/dist/index.js"
@@ -16,7 +16,6 @@
   },
   "files": [
     "cli/dist",
-    "scripts",
     "skills"
   ],
   "engines": {
