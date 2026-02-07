@@ -138,30 +138,62 @@ Description: ${briefDesc}
 
 /**
  * Group actions by category for better display
+ * Categories match the test file structure:
+ * - lifecycle.test.ts: 生命周期操作
+ * - node-operations.test.ts: 节点操作
+ * - component-operations.test.ts: 组件操作
+ * - property-operations.test.ts: 属性操作
+ * - gizmo-operations.test.ts: Gizmo 操作
+ * - query-operations.test.ts: 查询
+ * - camera-operations.test.ts: 相机操作
  */
 function groupActionsByCategory(actions: string[]): Record<string, string[]> {
   const categories: Record<string, string[]> = {
-    '场景操作': [],
-    '属性操作': [],
+    '生命周期操作': [],
     '节点操作': [],
     '组件操作': [],
+    '属性操作': [],
+    'Gizmo 操作': [],
     '查询': [],
-    '其他': [],
+    '相机操作': [],
   };
 
+  // Lifecycle operations (lifecycle.test.ts)
+  const lifecycleActions = ['query-is-ready', 'open-scene', 'save-scene', 'save-as-scene', 'close-scene', 'soft-reload'];
+
+  // Node operations (node-operations.test.ts)
+  const nodeActions = ['create-node', 'remove-node', 'copy-node', 'cut-node', 'paste-node', 'duplicate-node', 'set-parent', 'reset-node', 'restore-prefab', 'reset-component'];
+
+  // Component operations (component-operations.test.ts)
+  const componentActions = ['create-component', 'remove-component', 'execute-component-method', 'execute-scene-script'];
+
+  // Property operations (property-operations.test.ts)
+  const propertyActions = ['set-property', 'reset-property', 'move-array-element', 'remove-array-element'];
+
+  // Gizmo operations (gizmo-operations.test.ts)
+  const gizmoActions = ['change-gizmo-tool', 'query-gizmo-tool-name', 'change-gizmo-pivot', 'query-gizmo-pivot', 'change-gizmo-coordinate', 'query-gizmo-coordinate', 'change-is2D', 'query-is2D', 'set-grid-visible', 'query-is-grid-visible', 'set-icon-gizmo-3d', 'query-is-icon-gizmo-3d', 'set-icon-gizmo-size', 'query-icon-gizmo-size', 'snapshot', 'snapshot-abort'];
+
+  // Camera operations (camera-operations.test.ts)
+  const cameraActions = ['focus-camera', 'align-with-view', 'align-view-with-node'];
+
+  // Query operations (query-operations.test.ts)
+  const queryActions = ['query-node', 'query-node-tree', 'query-nodes-by-asset-uuid', 'query-dirty', 'query-component', 'query-classes', 'query-components', 'query-component-has-script', 'query-scene-bounds', 'is-native'];
+
   for (const action of actions) {
-    if (action.includes('scene') && action !== 'query-scene-bounds' && action !== 'execute-scene-script') {
-      categories['场景操作'].push(action);
-    } else if (action.includes('property') || action.includes('array')) {
-      categories['属性操作'].push(action);
-    } else if (action.includes('node') || action.includes('parent')) {
+    if (lifecycleActions.includes(action)) {
+      categories['生命周期操作'].push(action);
+    } else if (nodeActions.includes(action)) {
       categories['节点操作'].push(action);
-    } else if (action.includes('component')) {
+    } else if (componentActions.includes(action)) {
       categories['组件操作'].push(action);
-    } else if (action.startsWith('query-') || action.startsWith('is-')) {
+    } else if (propertyActions.includes(action)) {
+      categories['属性操作'].push(action);
+    } else if (gizmoActions.includes(action)) {
+      categories['Gizmo 操作'].push(action);
+    } else if (cameraActions.includes(action)) {
+      categories['相机操作'].push(action);
+    } else if (queryActions.includes(action)) {
       categories['查询'].push(action);
-    } else {
-      categories['其他'].push(action);
     }
   }
 

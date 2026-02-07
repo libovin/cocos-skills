@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npm install)",
+      "Bash(npm run build)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run test:unit:*)",
+      "Bash(npm run test:*)",
+      "Bash(ls:*)",
+      "Bash(npm run test:integration:*)"
     ]
   }
 }

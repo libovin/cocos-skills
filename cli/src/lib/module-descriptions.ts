@@ -25,11 +25,39 @@ export const MODULE_DESCRIPTIONS: Record<string, string> = {
  */
 export const ACTION_DESCRIPTIONS: Record<string, Record<string, string>> = {
   scene: {
-    // 场景操作
-    'open-scene': '打开指定路径的场景文件',
+    // 生命周期操作
+    'query-is-ready': '查询场景是否准备就绪',
+    'open-scene': '打开指定路径的资源文件（支持 .scene、.prefab 等 Cocos 资源文件）',
     'save-scene': '保存当前场景',
     'save-as-scene': '将场景另存为新文件',
     'close-scene': '关闭当前场景',
+    'soft-reload': '软重载场景',
+    'query-dirty': '查询场景是否已修改',
+
+    // 节点操作
+    'create-node': '创建新节点',
+    'remove-node': '删除节点',
+    'copy-node': '复制节点',
+    'cut-node': '剪切节点',
+    'paste-node': '粘贴节点',
+    'duplicate-node': '复制并粘贴节点',
+    'set-parent': '设置节点的父节点',
+    'reset-node': '重置节点变换',
+    'query-node': '查询节点信息',
+    'query-node-tree': '查询场景节点树',
+    'query-nodes-by-asset-uuid': '查询使用指定资源的节点',
+    'restore-prefab': '恢复预制体实例',
+
+    // 组件操作
+    'create-component': '添加组件到节点',
+    'remove-component': '从节点移除组件',
+    'reset-component': '重置组件属性',
+    'execute-component-method': '调用组件方法',
+    'execute-scene-script': '执行场景脚本',
+    'query-component': '查询组件的详细信息',
+    'query-components': '查询所有可用的组件类列表',
+    'query-classes': '查询可用组件类',
+    'query-component-has-script': '查询节点是否有脚本组件',
 
     // 属性操作
     'set-property': '设置节点或组件属性值',
@@ -37,68 +65,33 @@ export const ACTION_DESCRIPTIONS: Record<string, Record<string, string>> = {
     'move-array-element': '移动数组元素位置',
     'remove-array-element': '删除数组元素',
 
-    // 节点操作
-    'copy-node': '复制节点',
-    'duplicate-node': '复制并粘贴节点',
-    'paste-node': '粘贴节点',
-    'cut-node': '剪切节点',
-    'set-parent': '设置节点的父节点',
-    'create-node': '创建新节点',
-    'remove-node': '删除节点',
-    'reset-node': '重置节点变换',
+    // 查询
 
-    // 组件操作
-    'reset-component': '重置组件属性',
-    'restore-prefab': '恢复预制体实例',
-    'create-component': '添加组件到节点',
-    'remove-component': '从节点移除组件',
-    'execute-component-method': '调用组件方法',
+    'query-scene-bounds': '查询场景的边界信息',
+    'is-native': '查询节点是否为原生对象',
 
-    // 脚本执行
-    'execute-scene-script': '执行场景脚本',
-
-    // 快照
-    'snapshot': '创建场景快照',
-    'snapshot-abort': '中止快照操作',
-    'soft-reload': '软重载场景',
-
-    // Gizmo 工具
+    // Gizmo 操作
     'change-gizmo-tool': '切换 Gizmo 工具',
     'query-gizmo-tool-name': '查询当前 Gizmo 工具名称',
     'change-gizmo-pivot': '切换 Gizmo 中心点',
     'query-gizmo-pivot': '查询当前 Gizmo 中心点',
     'change-gizmo-coordinate': '切换 Gizmo 坐标系',
     'query-gizmo-coordinate': '查询当前 Gizmo 坐标系',
-
-    // 2D/3D
     'change-is2D': '切换 2D/3D 模式',
     'query-is2D': '查询是否为 2D 模式',
-
-    // 网格
     'set-grid-visible': '设置网格可见性',
     'query-is-grid-visible': '查询网格是否可见',
-
-    // 图标 Gizmo
     'set-icon-gizmo-3d': '设置图标 Gizmo 3D 模式',
     'query-is-icon-gizmo-3d': '查询图标 Gizmo 是否为 3D',
     'set-icon-gizmo-size': '设置图标 Gizmo 大小',
     'query-icon-gizmo-size': '查询图标 Gizmo 大小',
+    'snapshot': '创建场景快照',
+    'snapshot-abort': '中止快照操作',
 
-    // 相机
+    // 相机操作
     'focus-camera': '聚焦相机到节点',
     'align-with-view': '对齐视图到选中的节点',
     'align-view-with-node': '对齐节点到当前视图',
-
-    // 查询
-    'query-is-ready': '查询场景是否准备就绪',
-    'query-node': '查询节点信息',
-    'query-node-tree': '查询场景节点树',
-    'query-nodes-by-asset-uuid': '查询使用指定资源的节点',
-    'query-dirty': '查询场景是否已修改',
-    'query-classes': '查询可用组件类',
-    'query-component-has-script': '查询组件是否指定脚本',
-    'query-scene-bounds': '查询场景边界',
-    'is-native': '查询是否为原生对象',
   },
 
   'asset-db': {

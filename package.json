@@ -12,7 +12,13 @@
   "scripts": {
     "build": "tsc -p cli/tsconfig.json",
     "dev": "tsc -p cli/tsconfig.json --watch",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "vitest",
+    "test:unit": "vitest run cli/tests/unit",
+    "test:integration": "vitest run cli/tests/integration",
+    "test:e2e": "vitest run cli/tests/e2e",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch"
   },
   "files": [
     "cli/dist",
@@ -24,7 +30,10 @@
   "devDependencies": {
     "@types/commander": "^2.12.0",
     "@types/node": "^22.10.5",
-    "typescript": "^5.7.3"
+    "@vitest/coverage-v8": "^2.0.0",
+    "msw": "^2.0.0",
+    "typescript": "^5.7.3",
+    "vitest": "^2.0.0"
   },
   "keywords": [
     "cocos-creator",
