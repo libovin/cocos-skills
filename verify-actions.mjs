@@ -4,8 +4,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
-const scriptsDir = dirname(__filename);
-const rootDir = dirname(scriptsDir);
+const rootDir = dirname(__filename);
 
 const tsContent = readFileSync(join(rootDir, 'cli', 'src', 'types.ts'), 'utf-8');
 // 读取 details/index.ts 而不是 action-details.ts
