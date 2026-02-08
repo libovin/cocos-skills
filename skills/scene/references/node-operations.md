@@ -202,24 +202,43 @@ execute("scene", "cut-node", ["node-uuid"])
 
 ## set-parent
 
-设置节点的父节点。
+设置节点的父节点（移动节点到新的父节点下）。
 
 ```python
-execute("scene", "set-parent", ["node-uuid", "parent-uuid"])
+execute("scene", "set-parent", [{"uuids": ["节点UUID"], "parent": "父节点UUID"}])
 ```
 
 ### 参数
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| uuid | string | 节点 UUID |
-| parentUuid | string | 父节点 UUID |
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| uuids | array | 是 | 要移动的节点 UUID 数组 |
+| parent | string | 是 | 新父节点的 UUID |
+| index | number | 否 | 插入位置，默认添加到末尾 |
+
+### 示例
+
+```python
+# 移动单个节点
+execute("scene", "set-parent", [{"uuids": ["abc123"], "parent": "def456"}])
+
+# 移动节点并指定插入位置
+execute("scene", "set-parent", [{"uuids": ["abc123"], "parent": "def456", "index": 0}])
+
+# 批量移动多个节点
+execute("scene", "set-parent", [{"uuids": ["abc123", "ghi789"], "parent": "def456"}])
+```
 
 ### 返回值
 
 ```json
 {
   "success": true,
-  "data": null
+  "data": ["移动的节点UUID列表"]
 }
 ```
+
+### 注意事项
+
+1. 不能将节点移动到其子孙节点下（会造成循环引用）
+2. 修改后需要调用 `save-scene` 保存到磁盘

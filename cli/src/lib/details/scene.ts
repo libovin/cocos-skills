@@ -186,16 +186,13 @@ export const sceneDetails: ModuleActionDetails = {
   'set-parent': {
     description: '设置节点的父节点（移动节点）',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '要移动的节点路径' },
-      { name: 'parentPath', type: 'string', required: true, description: '新父节点路径' },
-      { name: 'index', type: 'number', required: false, description: '插入位置（可选），默认添加到末尾' },
+      { name: 'params', type: 'object', required: true, description: '包含 uuids（节点UUID数组）、parent（父节点UUID）、index（可选，插入位置）的对象' },
     ],
     examples: [
-      'cocos-skills scene set-parent /Canvas/Sprite /Container',
-      'cocos-skills scene set-parent /Canvas/Sprite /Container 0',
-      'cocos-skills scene set-parent /OldParent/Child /NewParent',
+      'cocos-skills scene set-parent \'{"uuids":["节点UUID"],"parent":"父节点UUID"}\'',
+      'cocos-skills scene set-parent \'{"uuids":["节点UUID"],"parent":"父节点UUID","index":0}\'',
     ],
-    notes: '改变节点的层级关系。会保留节点的世界变换（如果可能）。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
+    notes: '改变节点的层级关系，支持批量移动多个节点。uuids 是要移动的节点 UUID 数组，parent 是新父节点的 UUID，index 是可选的插入位置（默认添加到末尾）。不能将节点移动到其子孙节点下。重要：修改场景后需要调用 save-scene 保存到磁盘',
   },
   'create-node': {
     description: '创建新节点',
