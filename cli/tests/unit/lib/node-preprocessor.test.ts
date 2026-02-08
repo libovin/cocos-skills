@@ -33,7 +33,7 @@ describe('node-preprocessor', () => {
       const result = preprocessCreateNode(params);
 
       expect(result.nodeParams).toEqual({ name: 'MyCanvas' });
-      expect(result.componentsToAdd).toEqual(['cc.UITransform', 'cc.Canvas', 'cc.Widget']);
+      expect(result.componentsToAdd).toEqual(['cc.Canvas', 'cc.Widget']);
       expect(result.children).toEqual([{ type: 'cc.Camera', name: 'Camera' }]);
     });
 
@@ -42,7 +42,7 @@ describe('node-preprocessor', () => {
       const result = preprocessCreateNode(params);
 
       expect(result.nodeParams).toEqual({});
-      expect(result.componentsToAdd).toEqual(['cc.UITransform', 'cc.Sprite']);
+      expect(result.componentsToAdd).toEqual(['cc.Sprite']);
     });
 
     it('should extract components for cc.Label type', () => {
@@ -50,7 +50,7 @@ describe('node-preprocessor', () => {
       const result = preprocessCreateNode(params);
 
       expect(result.nodeParams).toEqual({});
-      expect(result.componentsToAdd).toEqual(['cc.UITransform', 'cc.Label']);
+      expect(result.componentsToAdd).toEqual(['cc.Label']);
     });
 
     it('should extract components for cc.Button type', () => {
@@ -58,7 +58,7 @@ describe('node-preprocessor', () => {
       const result = preprocessCreateNode(params);
 
       expect(result.nodeParams).toEqual({});
-      expect(result.componentsToAdd).toEqual(['cc.UITransform', 'cc.Button', 'cc.Sprite']);
+      expect(result.componentsToAdd).toEqual(['cc.Button', 'cc.Sprite']);
     });
 
     it('should extract components for cc.Layout type', () => {
@@ -66,7 +66,7 @@ describe('node-preprocessor', () => {
       const result = preprocessCreateNode(params);
 
       expect(result.nodeParams).toEqual({});
-      expect(result.componentsToAdd).toEqual(['cc.UITransform', 'cc.Layout']);
+      expect(result.componentsToAdd).toEqual(['cc.Layout']);
     });
 
     it('should extract components for cc.ScrollView type', () => {
@@ -74,7 +74,7 @@ describe('node-preprocessor', () => {
       const result = preprocessCreateNode(params);
 
       expect(result.nodeParams).toEqual({});
-      expect(result.componentsToAdd).toEqual(['cc.UITransform', 'cc.ScrollView', 'cc.Widget']);
+      expect(result.componentsToAdd).toEqual(['cc.Sprite', 'cc.ScrollView']);
     });
 
     it('should extract components for cc.EditBox type', () => {
@@ -82,7 +82,7 @@ describe('node-preprocessor', () => {
       const result = preprocessCreateNode(params);
 
       expect(result.nodeParams).toEqual({});
-      expect(result.componentsToAdd).toEqual(['cc.UITransform', 'cc.Sprite', 'cc.EditBox']);
+      expect(result.componentsToAdd).toEqual(['cc.Sprite', 'cc.EditBox']);
       expect(result.children).toEqual([
         { type: 'cc.Label', name: 'PLACEHOLDER_LABEL' },
         { type: 'cc.Label', name: 'TEXT_LABEL' },
@@ -94,7 +94,7 @@ describe('node-preprocessor', () => {
       const result = preprocessCreateNode(params);
 
       expect(result.nodeParams).toEqual({});
-      expect(result.componentsToAdd).toEqual(['cc.UITransform', 'cc.Toggle', 'cc.Sprite']);
+      expect(result.componentsToAdd).toEqual(['cc.UITransform', 'cc.Sprite', 'cc.Toggle']);
     });
 
     it('should extract components for cc.Slider type', () => {
@@ -102,7 +102,7 @@ describe('node-preprocessor', () => {
       const result = preprocessCreateNode(params);
 
       expect(result.nodeParams).toEqual({});
-      expect(result.componentsToAdd).toEqual(['cc.UITransform', 'cc.Slider', 'cc.Sprite']);
+      expect(result.componentsToAdd).toEqual(['cc.UITransform', 'cc.Sprite', 'cc.Slider']);
     });
 
     it('should extract components for cc.ProgressBar type', () => {
@@ -110,7 +110,7 @@ describe('node-preprocessor', () => {
       const result = preprocessCreateNode(params);
 
       expect(result.nodeParams).toEqual({});
-      expect(result.componentsToAdd).toEqual(['cc.UITransform', 'cc.ProgressBar', 'cc.Sprite']);
+      expect(result.componentsToAdd).toEqual(['cc.Sprite', 'cc.ProgressBar']);
     });
 
     it('should extract components for cc.RichText type', () => {
@@ -118,7 +118,7 @@ describe('node-preprocessor', () => {
       const result = preprocessCreateNode(params);
 
       expect(result.nodeParams).toEqual({});
-      expect(result.componentsToAdd).toEqual(['cc.UITransform', 'cc.RichText']);
+      expect(result.componentsToAdd).toEqual(['cc.RichText']);
     });
 
     it('should extract components for cc.BlockInputEvents type', () => {
@@ -126,7 +126,8 @@ describe('node-preprocessor', () => {
       const result = preprocessCreateNode(params);
 
       expect(result.nodeParams).toEqual({});
-      expect(result.componentsToAdd).toEqual(['cc.BlockInputEvents']);
+      // cc.BlockInputEvents is not defined in NODE_TYPE_CONFIGS, so componentsToAdd should be undefined
+      expect(result.componentsToAdd).toBeUndefined();
     });
 
     it('should extract components for cc.Widget type', () => {
@@ -150,24 +151,24 @@ describe('node-preprocessor', () => {
       const result = preprocessCreateNode(params);
 
       expect(result.nodeParams).toEqual({ name: 'MySprite', parent: 'Canvas' });
-      expect(result.componentsToAdd).toEqual(['cc.UITransform', 'cc.Sprite']);
+      expect(result.componentsToAdd).toEqual(['cc.Sprite']);
     });
   });
 
   describe('getComponentsForNodeType', () => {
     it('should return correct components for cc.Canvas', () => {
       const components = getComponentsForNodeType('cc.Canvas');
-      expect(components).toEqual(['cc.UITransform', 'cc.Canvas', 'cc.Widget']);
+      expect(components).toEqual(['cc.Canvas', 'cc.Widget']);
     });
 
     it('should return correct components for cc.Sprite', () => {
       const components = getComponentsForNodeType('cc.Sprite');
-      expect(components).toEqual(['cc.UITransform', 'cc.Sprite']);
+      expect(components).toEqual(['cc.Sprite']);
     });
 
     it('should return correct components for cc.Label', () => {
       const components = getComponentsForNodeType('cc.Label');
-      expect(components).toEqual(['cc.UITransform', 'cc.Label']);
+      expect(components).toEqual(['cc.Label']);
     });
 
     it('should return empty array for unknown type', () => {

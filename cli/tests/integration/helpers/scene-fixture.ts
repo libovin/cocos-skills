@@ -35,6 +35,24 @@ export interface CreateNodeOptions {
 }
 
 /**
+ * Options for SceneFixture
+ */
+export interface SceneFixtureOptions {
+  /**
+   * Whether to save the scene before closing in teardown.
+   * For testing, we typically don't want to save test scenes.
+   * @default false
+   */
+  saveOnTeardown?: boolean;
+
+  /**
+   * Whether to delete the test scene asset in teardown.
+   * @default false
+   */
+  deleteOnTeardown?: boolean;
+}
+
+/**
  * Scene fixture helper class
  */
 export class SceneFixture {
@@ -43,17 +61,28 @@ export class SceneFixture {
   private testScenePath: string;
   private testSceneName: string;
   private isAvailable: boolean = false;
+  private options: SceneFixtureOptions;
 
   /**
    * Create a new SceneFixture
    * @param client CocosClient instance
    * @param scenePath Test scene path (default: db://assets/IntegrationTest.scene)
    * @param sceneName Test scene name (default: IntegrationTest)
+   * @param options Fixture options
    */
-  constructor(client: CocosClient, scenePath: string = 'db://assets/IntegrationTest.scene', sceneName: string = 'IntegrationTest') {
+  constructor(
+    client: CocosClient,
+    scenePath: string = 'db://assets/IntegrationTest.scene',
+    sceneName: string = 'IntegrationTest',
+    options: SceneFixtureOptions = {}
+  ) {
     this.client = client;
     this.testScenePath = scenePath;
     this.testSceneName = sceneName;
+    this.options = {
+      saveOnTeardown: options.saveOnTeardown ?? false,
+      deleteOnTeardown: options.deleteOnTeardown ?? false,
+    };
   }
 
   /**
@@ -346,13 +375,19 @@ export class SceneFixture {
       // Clean up test nodes first
       await this.cleanupTestNodes();
 
-      // Save and close the test scene
-      await this.client.execute('scene', 'save-scene');
+      // Save the scene only if configured to do so
+      // For testing, we typically don't save to avoid file dialogs
+      if (this.options.saveOnTeardown) {
+        await this.client.execute('scene', 'save-scene');
+      }
+
+      // Close the test scene
       await this.client.execute('scene', 'close-scene');
 
-      // Optionally delete the test scene asset
-      // Uncomment if you want to clean up the test scene file
-      // await this.client.execute('asset-db', 'delete-asset', [this.testScenePath]);
+      // Delete the test scene asset if configured
+      if (this.options.deleteOnTeardown) {
+        await this.client.execute('asset-db', 'delete-asset', [this.testScenePath]);
+      }
     } catch {
       // Ignore teardown errors
     }

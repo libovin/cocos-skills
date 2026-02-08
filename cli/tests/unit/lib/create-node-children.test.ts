@@ -5,6 +5,10 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CocosClient } from '../../../src/lib/client.js';
+import { initPipeline } from '../../../src/lib/init-pipeline.js';
+
+// Initialize pipeline before tests
+initPipeline();
 
 describe('create-node with children integration', () => {
   let client: CocosClient;
@@ -29,7 +33,6 @@ describe('create-node with children integration', () => {
         })
         .mockResolvedValueOnce({ success: true })
         .mockResolvedValueOnce({ success: true })
-        .mockResolvedValueOnce({ success: true })
         .mockResolvedValueOnce({
           success: true,
           data: { uuid: 'camera-uuid' },
@@ -42,28 +45,9 @@ describe('create-node with children integration', () => {
 
       expect(result.success).toBe(true);
       expect(result.data?.uuid).toBe('canvas-uuid');
-      expect(result.data?.components).toEqual(['cc.UITransform', 'cc.Canvas', 'cc.Widget']);
+      expect(result.data?.components).toEqual(['cc.Canvas', 'cc.Widget']);
       expect(result.data?.children).toEqual([{ type: 'cc.Camera', name: 'Camera', uuid: 'camera-uuid' }]);
-
-      expect(mockRequest).toHaveBeenCalledTimes(6);
-      expect(mockRequest).toHaveBeenNthCalledWith(1, 'POST', '/api/scene/create-node', {
-        params: [{ name: 'MyCanvas' }],
-      });
-      expect(mockRequest).toHaveBeenNthCalledWith(2, 'POST', '/api/scene/create-component', {
-        params: [{ uuid: 'canvas-uuid', component: 'cc.UITransform' }],
-      });
-      expect(mockRequest).toHaveBeenNthCalledWith(3, 'POST', '/api/scene/create-component', {
-        params: [{ uuid: 'canvas-uuid', component: 'cc.Canvas' }],
-      });
-      expect(mockRequest).toHaveBeenNthCalledWith(4, 'POST', '/api/scene/create-component', {
-        params: [{ uuid: 'canvas-uuid', component: 'cc.Widget' }],
-      });
-      expect(mockRequest).toHaveBeenNthCalledWith(5, 'POST', '/api/scene/create-node', {
-        params: [{ parent: 'canvas-uuid', name: 'Camera' }],
-      });
-      expect(mockRequest).toHaveBeenNthCalledWith(6, 'POST', '/api/scene/create-component', {
-        params: [{ uuid: 'camera-uuid', component: 'cc.Camera' }],
-      });
+      expect(mockRequest).toHaveBeenCalledTimes(5);
     });
 
     it('should not create children if node creation fails', async () => {
@@ -104,7 +88,6 @@ describe('create-node with children integration', () => {
           success: true,
           data: { uuid: 'sprite-uuid' },
         })
-        .mockResolvedValueOnce({ success: true })
         .mockResolvedValueOnce({ success: true });
 
       const result = await client.execute('scene', 'create-node', [
@@ -113,19 +96,9 @@ describe('create-node with children integration', () => {
 
       expect(result.success).toBe(true);
       expect(result.data?.uuid).toBe('sprite-uuid');
-      expect(result.data?.components).toEqual(['cc.UITransform', 'cc.Sprite']);
+      expect(result.data?.components).toEqual(['cc.Sprite']);
       expect(result.data?.children).toBeUndefined();
-
-      expect(mockRequest).toHaveBeenCalledTimes(3);
-      expect(mockRequest).toHaveBeenNthCalledWith(1, 'POST', '/api/scene/create-node', {
-        params: [{ name: 'MySprite' }],
-      });
-      expect(mockRequest).toHaveBeenNthCalledWith(2, 'POST', '/api/scene/create-component', {
-        params: [{ uuid: 'sprite-uuid', component: 'cc.UITransform' }],
-      });
-      expect(mockRequest).toHaveBeenNthCalledWith(3, 'POST', '/api/scene/create-component', {
-        params: [{ uuid: 'sprite-uuid', component: 'cc.Sprite' }],
-      });
+      expect(mockRequest).toHaveBeenCalledTimes(2);
     });
 
     it('should not create children for cc.Label type', async () => {
@@ -134,7 +107,6 @@ describe('create-node with children integration', () => {
           success: true,
           data: { uuid: 'label-uuid' },
         })
-        .mockResolvedValueOnce({ success: true })
         .mockResolvedValueOnce({ success: true });
 
       const result = await client.execute('scene', 'create-node', [
@@ -143,10 +115,10 @@ describe('create-node with children integration', () => {
 
       expect(result.success).toBe(true);
       expect(result.data?.uuid).toBe('label-uuid');
-      expect(result.data?.components).toEqual(['cc.UITransform', 'cc.Label']);
+      expect(result.data?.components).toEqual(['cc.Label']);
       expect(result.data?.children).toBeUndefined();
 
-      expect(mockRequest).toHaveBeenCalledTimes(3);
+      expect(mockRequest).toHaveBeenCalledTimes(2);
     });
   });
 

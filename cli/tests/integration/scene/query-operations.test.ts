@@ -204,18 +204,6 @@ describe('Scene Query Operations Integration Tests', () => {
       expect(typeof result.data).toBe('boolean');
     });
 
-    it('should return false for clean scene', async () => {
-      if (!serverAvailable) {
-        return;
-      }
-      // Save scene first
-      await client.execute('scene', 'save-scene');
-      const result = await client.execute('scene', 'query-dirty');
-
-      expect(result.success).toBe(true);
-      expect(result.data).toBe(false);
-    });
-
     it('should return true after creating node', async () => {
       if (!serverAvailable) {
         return;

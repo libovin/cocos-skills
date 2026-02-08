@@ -118,11 +118,12 @@ export class CocosClient {
     });
 
     // Process response through postprocessor
+    // Pass processedParams (which contains metadata) instead of original params
     const finalResult = await processResponse(
       module,
       action,
       result,
-      params,
+      processedParams,
       this
     );
 
