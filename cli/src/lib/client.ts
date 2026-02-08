@@ -7,6 +7,7 @@ import { request } from '../utils/http.js';
 import { loadServerUrl, getDefaultServerUrl, parseServerUrl } from './config.js';
 import { validateModuleAction, invalidateCache } from './validator.js';
 import { processRequest, processResponse } from './pipeline/pipeline.js';
+import { initPipeline } from './init-pipeline.js';
 import type { ApiResponse } from '../types.js';
 
 /**
@@ -23,6 +24,10 @@ export class CocosClient {
   private validate: boolean;
 
   constructor(config: ClientConfig = {}) {
+    // Initialize pipeline (register validators, preprocessors, postprocessors)
+    // This is safe to call multiple times - it will only initialize once
+    initPipeline();
+
     // Try to load from config file first
     const configUrl = loadServerUrl();
 

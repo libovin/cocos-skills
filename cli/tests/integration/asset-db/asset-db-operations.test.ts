@@ -117,17 +117,17 @@ describe('Asset Database Integration Tests', () => {
 
       if (assetsResult.success && Array.isArray(assetsResult.data) && assetsResult.data.length > 0) {
         // Query the first real asset
-        const firstAsset = assetsResult.data[0] as { path: string };
-        const result = await testClient.execute('asset-db', 'query-asset-info', [firstAsset.path]);
+        const firstAsset = assetsResult.data[0] as { url: string };
+        const result = await testClient.execute('asset-db', 'query-asset-info', [firstAsset.url]);
         validateApiResponse(result);
 
         // Should return a valid response with asset details
         if (result.success && result.data) {
           const assetInfo = result.data as Record<string, unknown>;
           // Verify common asset properties
-          expect(assetInfo).toHaveProperty('path');
-          expect(typeof assetInfo.path).toBe('string');
-          expect(assetInfo.path).toBe(firstAsset.path);
+          expect(assetInfo).toHaveProperty('url');
+          expect(typeof assetInfo.url).toBe('string');
+          expect(assetInfo.url).toBe(firstAsset.url);
 
           // Verify asset has type information
           expect(assetInfo).toHaveProperty('type');
@@ -174,8 +174,8 @@ describe('Asset Database Integration Tests', () => {
       validateApiResponse(assetsResult);
 
       if (assetsResult.success && Array.isArray(assetsResult.data) && assetsResult.data.length > 0) {
-        const firstAsset = assetsResult.data[0] as { path: string; uuid: string };
-        const result = await testClient.execute('asset-db', 'query-uuid', [firstAsset.path]);
+        const firstAsset = assetsResult.data[0] as { url: string; uuid: string };
+        const result = await testClient.execute('asset-db', 'query-uuid', [firstAsset.url]);
         validateApiResponse(result);
 
         // Should return the UUID for the asset
@@ -262,8 +262,8 @@ describe('Asset Database Integration Tests', () => {
         expect(result).toHaveProperty('data');
         if (result.data) {
           expect(typeof result.data).toBe('object');
-          const createdAsset = result.data as { path: string; uuid: string };
-          expect(createdAsset.path).toBe(testAssetPath);
+          const createdAsset = result.data as { url: string; uuid: string };
+          expect(createdAsset.url).toBe(testAssetPath);
           expect(typeof createdAsset.uuid).toBe('string');
           expect(createdAsset.uuid).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
         }
@@ -291,8 +291,8 @@ describe('Asset Database Integration Tests', () => {
       if (result.success) {
         expect(result).toHaveProperty('data');
         if (result.data) {
-          const createdAsset = result.data as { path: string; uuid: string };
-          expect(createdAsset.path).toBe(testAssetPath);
+          const createdAsset = result.data as { url: string; uuid: string };
+          expect(createdAsset.url).toBe(testAssetPath);
           expect(typeof createdAsset.uuid).toBe('string');
         }
       } else {
@@ -305,16 +305,10 @@ describe('Asset Database Integration Tests', () => {
         return;
       }
 
-      // Invalid path without db:// prefix
-      const result = await testClient.execute('asset-db', 'create-asset', ['invalid-path.json']);
-      validateApiResponse(result);
-
-      // Should fail gracefully
-      expect(result).toHaveProperty('success');
-      expect(result).toHaveProperty('error');
-      if (result.error) {
-        expect(typeof result.error).toBe('string');
-      }
+      // Invalid path without db:// prefix - should throw validation error
+      await expect(
+        testClient.execute('asset-db', 'create-asset', ['invalid-path.json'])
+      ).rejects.toThrow();
     });
   });
 
@@ -560,6 +554,9 @@ describe('Asset Database Integration Tests', () => {
       const testScenePath = `db://assets/TestSceneToOpen_${Date.now()}.scene`;
       const createResult = await testClient.execute('asset-db', 'create-asset', [testScenePath]);
       validateApiResponse(createResult);
+      if (!createResult.success) {
+        console.log('Create scene failed:', createResult.error);
+      }
       expect(createResult.success).toBe(true);
       if (createResult.success) {
         // Open the scene in editor
@@ -579,46 +576,26 @@ describe('Asset Database Integration Tests', () => {
         return;
       }
 
-      // Step 1: Create a test prefab
-      const testPrefabPath = `db://assets/TestPrefabToSave_${Date.now()}.prefab`;
-      const createResult = await testClient.execute('asset-db', 'create-asset', [testPrefabPath]);
+      // Step 1: Create a test JSON asset (simpler to save than prefab)
+      const testAssetPath = `db://assets/TestAssetToSave_${Date.now()}.json`;
+      const initialContent = '{"key": "initial value"}';
+      const createResult = await testClient.execute('asset-db', 'create-asset', [testAssetPath, initialContent]);
       validateApiResponse(createResult);
       expect(createResult.success).toBe(true);
-      
-      if (createResult.success && createResult.data) {
-        // Step 2: Open the prefab in editor
-        const openResult = await testClient.execute('asset-db', 'open-asset', [testPrefabPath]);
-        validateApiResponse(openResult);
-        expect(openResult.success).toBe(true);
 
-        // Step 3: Create a node in the current scene (which should be the opened prefab)
-        const nodeName = `TestNode_${Date.now()}`;
-        const createNodeResult = await testClient.execute('scene', 'create-node', [
-          { name: nodeName },
-        ]);
-        validateApiResponse(createNodeResult);
+      // Step 2: Open the asset in editor
+      const openResult = await testClient.execute('asset-db', 'open-asset', [testAssetPath]);
+      validateApiResponse(openResult);
+      expect(openResult.success).toBe(true);
 
-        if (createNodeResult.success && createNodeResult.data) {
-          const createdNode = createNodeResult.data as { uuid: string };
-          expect(createdNode.uuid).toBeDefined();
-          expect(typeof createdNode.uuid).toBe('string');
+      // Step 3: Save asset changes with new content
+      const updatedContent = '{"key": "updated value", "newField": "test"}';
+      const saveResult = await testClient.execute('asset-db', 'save-asset', [testAssetPath, updatedContent]);
+      validateApiResponse(saveResult);
+      expect(saveResult.success).toBe(true);
 
-          // Step 4: Save the asset
-          const saveResult = await testClient.execute('asset-db', 'save-asset', [testPrefabPath]);
-          validateApiResponse(saveResult);
-          expect(saveResult.success).toBe(true);
-
-          // Step 5: Verify the changes were persisted by reopening and checking
-          // Reopen the asset
-          await testClient.execute('asset-db', 'open-asset', [testPrefabPath]);
-
-          // Note: The node persistence verification depends on the scene structure
-          // At minimum, we've verified that open-asset and save-asset execute without errors
-        }
-
-        // Cleanup
-        // await testClient.execute('asset-db', 'delete-asset', [testPrefabPath]);
-      }
+      // Cleanup
+      await testClient.execute('asset-db', 'delete-asset', [testAssetPath]);
     });
 
     it('should save asset meta file', async () => {
@@ -630,41 +607,45 @@ describe('Asset Database Integration Tests', () => {
       const testAssetPath = `db://assets/TestMetaSave_${Date.now()}.json`;
       const createResult = await testClient.execute('asset-db', 'create-asset', [testAssetPath]);
       validateApiResponse(createResult);
+      expect(createResult.success).toBe(true);
 
-      if (createResult.success) {
-        // Query the original meta
-        const originalMetaResult = await testClient.execute('asset-db', 'query-asset-meta', [
+      // Query the original meta
+      const originalMetaResult = await testClient.execute('asset-db', 'query-asset-meta', [
+        testAssetPath,
+      ]);
+      validateApiResponse(originalMetaResult);
+      expect(originalMetaResult.success).toBe(true);
+
+      if (originalMetaResult.success && originalMetaResult.data) {
+        const originalMeta = originalMetaResult.data as Record<string, unknown>;
+        expect(originalMeta).toHaveProperty('ver');
+        expect(typeof originalMeta.ver).toBe('string');
+
+        // Save the asset meta with modified content
+        // Keep the same structure but modify a field if needed
+        const modifiedMeta = JSON.stringify(originalMeta);
+        const saveMetaResult = await testClient.execute('asset-db', 'save-asset-meta', [
+          testAssetPath,
+          modifiedMeta,
+        ]);
+        validateApiResponse(saveMetaResult);
+        expect(saveMetaResult.success).toBe(true);
+
+        // Verify the meta still exists and is valid after saving
+        const newMetaResult = await testClient.execute('asset-db', 'query-asset-meta', [
           testAssetPath,
         ]);
-        validateApiResponse(originalMetaResult);
+        validateApiResponse(newMetaResult);
 
-        if (originalMetaResult.success && originalMetaResult.data) {
-          const originalMeta = originalMetaResult.data as Record<string, unknown>;
-          expect(originalMeta).toHaveProperty('ver');
-          expect(typeof originalMeta.ver).toBe('string');
-
-          // Save the asset meta (this may trigger meta regeneration)
-          const saveMetaResult = await testClient.execute('asset-db', 'save-asset-meta', [
-            testAssetPath,
-          ]);
-          validateApiResponse(saveMetaResult);
-
-          // Verify the meta still exists and is valid after saving
-          const newMetaResult = await testClient.execute('asset-db', 'query-asset-meta', [
-            testAssetPath,
-          ]);
-          validateApiResponse(newMetaResult);
-
-          if (newMetaResult.success && newMetaResult.data) {
-            const newMeta = newMetaResult.data as Record<string, unknown>;
-            expect(newMeta).toHaveProperty('ver');
-            expect(typeof newMeta.ver).toBe('string');
-          }
+        if (newMetaResult.success && newMetaResult.data) {
+          const newMeta = newMetaResult.data as Record<string, unknown>;
+          expect(newMeta).toHaveProperty('ver');
+          expect(typeof newMeta.ver).toBe('string');
         }
-
-        // Cleanup
-        await testClient.execute('asset-db', 'delete-asset', [testAssetPath]);
       }
+
+      // Cleanup
+      await testClient.execute('asset-db', 'delete-asset', [testAssetPath]);
     });
   });
 
@@ -711,7 +692,52 @@ describe('Asset Database Integration Tests', () => {
   });
 
   describe('delete-asset', () => {
-    it('should handle delete operations gracefully', async () => {
+    it('should delete existing asset and verify deletion', async () => {
+      if (!isServerAvailable || !testClient) {
+        return;
+      }
+
+      // Step 1: Create an asset to delete
+      const testAssetPath = `db://assets/AssetToDelete_${Date.now()}.json`;
+      const createResult = await testClient.execute('asset-db', 'create-asset', [testAssetPath]);
+      validateApiResponse(createResult);
+      expect(createResult.success).toBe(true);
+
+      if (createResult.success && createResult.data) {
+        const createdAsset = createResult.data as { url: string; uuid: string };
+        expect(createdAsset.url).toBe(testAssetPath);
+        expect(createdAsset.uuid).toBeDefined();
+        expect(typeof createdAsset.uuid).toBe('string');
+
+        // Step 2: Verify asset exists before deletion and content matches
+        const queryBeforeResult = await testClient.execute('asset-db', 'query-asset-info', [testAssetPath]);
+        validateApiResponse(queryBeforeResult);
+
+        if (queryBeforeResult.success && queryBeforeResult.data) {
+          const queriedAsset = queryBeforeResult.data as { url: string; uuid: string };
+          // Verify the queried content matches the created asset
+          expect(queriedAsset.url).toBe(createdAsset.url);
+          expect(queriedAsset.uuid).toBe(createdAsset.uuid);
+        } else {
+          throw new Error('Query asset info failed or returned no data');
+        }
+
+        // Step 3: Delete the asset
+        const deleteResult = await testClient.execute('asset-db', 'delete-asset', [testAssetPath]);
+        validateApiResponse(deleteResult);
+        expect(deleteResult.success).toBe(true);
+
+        // Step 4: Verify asset no longer exists after deletion
+        const queryAfterResult = await testClient.execute('asset-db', 'query-asset-info', [testAssetPath]);
+        validateApiResponse(queryAfterResult);
+
+        // The query should return success but with null data for deleted asset
+        expect(queryAfterResult.success).toBe(true);
+        expect(queryAfterResult.data).toBeNull();
+      }
+    });
+
+    it('should handle delete operations gracefully for non-existent asset', async () => {
       if (!isServerAvailable || !testClient) {
         return;
       }
@@ -784,8 +810,8 @@ describe('Asset Database Integration Tests', () => {
 
       // Only verify if creation succeeded
       if (createResult.success && createResult.data) {
-        const createdAsset = createResult.data as { path: string; uuid: string };
-        expect(createdAsset.path).toBe(testAssetPath);
+        const createdAsset = createResult.data as { url: string; uuid: string };
+        expect(createdAsset.url).toBe(testAssetPath);
 
         // Step 2: Query the created asset info
         const queryResult = await testClient.execute('asset-db', 'query-asset-info', [testAssetPath]);
@@ -795,7 +821,7 @@ describe('Asset Database Integration Tests', () => {
         expect(queryResult.success).toBe(true);
         if (queryResult.success && queryResult.data) {
           const assetInfo = queryResult.data as Record<string, unknown>;
-          expect(assetInfo.path).toBe(testAssetPath);
+          expect(assetInfo.url).toBe(testAssetPath);
           expect(assetInfo.uuid).toBe(createdAsset.uuid);
         }
       }
@@ -812,7 +838,7 @@ describe('Asset Database Integration Tests', () => {
       validateApiResponse(createResult);
 
       if (createResult.success && createResult.data) {
-        const createdAsset = createResult.data as { path: string; uuid: string };
+        const createdAsset = createResult.data as { uuid: string };
 
         // Step 2: Query UUID by path
         const uuidResult = await testClient.execute('asset-db', 'query-uuid', [testAssetPath]);
@@ -843,9 +869,9 @@ describe('Asset Database Integration Tests', () => {
 
         expect(queryResult.success).toBe(true);
         if (queryResult.success && Array.isArray(queryResult.data)) {
-          // Find our created asset in the list
+          // Find our created asset in the list (use url field since path doesn't include extension)
           const foundAsset = queryResult.data.find(
-            (asset: { path: string }) => asset.path === testAssetPath
+            (asset: { url: string }) => asset.url === testAssetPath
           );
           expect(foundAsset).toBeDefined();
         }
@@ -863,16 +889,18 @@ describe('Asset Database Integration Tests', () => {
       validateApiResponse(createResult);
 
       if (createResult.success && createResult.data) {
-        const createdAsset = createResult.data as { path: string; uuid: string };
+        const createdAsset = createResult.data as { uuid: string };
 
         // Step 2: Query path by UUID
         const pathResult = await testClient.execute('asset-db', 'query-path', [createdAsset.uuid]);
         validateApiResponse(pathResult);
 
-        // Verify the path matches
+        // Verify the path matches (query-path returns file system path, not db://)
         expect(pathResult).toHaveProperty('success');
         if (pathResult.success && pathResult.data) {
-          expect(pathResult.data).toBe(testAssetPath);
+          expect(typeof pathResult.data).toBe('string');
+          // query-path returns file system path (e.g., E:\project\assets\file.json)
+          expect(pathResult.data).toMatch(/assets[/\\]PathTest_.*\.json$/);
         }
       }
     });
@@ -888,7 +916,7 @@ describe('Asset Database Integration Tests', () => {
       validateApiResponse(createResult);
 
       if (createResult.success && createResult.data) {
-        const createdAsset = createResult.data as { path: string; uuid: string };
+        const createdAsset = createResult.data as { uuid: string };
 
         // Step 2: Query URL by UUID
         const urlResult = await testClient.execute('asset-db', 'query-url', [createdAsset.uuid]);

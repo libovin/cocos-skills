@@ -86,24 +86,27 @@ export const assetDbDetails: ModuleActionDetails = {
     notes: '根据资源类型，会在相应的编辑器中打开（场景编辑器、预制体编辑器等）',
   },
   'save-asset': {
-    description: '保存资源更改',
+    description: '保存资源内容到磁盘',
     parameters: [
       { name: 'path', type: 'string', required: true, description: '资源路径' },
+      { name: 'content', type: 'string | Buffer', required: true, description: '资源内容（JSON 字符串或二进制数据）' },
     ],
     examples: [
-      'cocos-skills asset-db save-asset db://assets/scenes/Main.scene',
+      'cocos-skills asset-db save-asset db://assets/data/config.json \'{"key": "new value"}\'',
+      'cocos-skills asset-db save-asset db://assets/scenes/Main.scene \'{"__type__": "cc.SceneAsset", "data": {...}}\'',
     ],
-    notes: '通常在资源被修改后使用，确保更改被写入磁盘',
+    notes: '保存资源内容到磁盘。第二个参数可以是 JSON 字符串（用于 .json、.scene、.prefab 等文本资源）或 Buffer（用于二进制资源）',
   },
   'save-asset-meta': {
     description: '保存资源的 meta 文件',
     parameters: [
       { name: 'path', type: 'string', required: true, description: '资源路径' },
+      { name: 'metaContent', type: 'string', required: true, description: 'meta 文件内容（JSON 字符串）' },
     ],
     examples: [
-      'cocos-skills asset-db save-asset-meta db://assets/textures/sprite.png',
+      'cocos-skills asset-db save-asset-meta db://assets/textures/sprite.png \'{"ver": "1.1.0", "uuid": "..."}\'',
     ],
-    notes: 'meta 文件包含资源的导入设置、UUID 等重要信息',
+    notes: 'meta 文件包含资源的导入设置、UUID 等重要信息。第二个参数应为完整的 meta JSON 字符串',
   },
   'reimport-asset': {
     description: '重新导入资源',
