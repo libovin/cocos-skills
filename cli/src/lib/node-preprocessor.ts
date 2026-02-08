@@ -30,85 +30,85 @@ const NODE_TYPE_CONFIGS: Record<string, NodeTypeConfig> = {
 
   // 2D Object 节点
   'cc.Graphics': {
-    components: ['cc.UITransform', 'cc.Graphics'],
+    components: ['cc.Graphics'],
   },
   'cc.Label': {
-    components: ['cc.UITransform', 'cc.Label'],
+    components: ['cc.Label'],
   },
   'cc.Mask': {
-    components: ['cc.UITransform', 'cc.Mask', 'cc.Graphics'],
+    components: ['cc.Mask', 'cc.Graphics'],
   },
   'cc.Sprite': {
-    components: ['cc.UITransform', 'cc.Sprite'],
+    components: ['cc.Sprite'],
   },
   'cc.ParticleSystem2D': {
-    components: ['cc.UITransform', 'cc.ParticleSystem2D'],
+    components: ['cc.ParticleSystem2D'],
   },
   'cc.TiledMap': {
-    components: ['cc.UITransform', 'cc.TiledMap'],
+    components: ['cc.TiledMap'],
   },
 
 
   // UI 组件 节点
 
   'cc.Button': {
-    components: ['cc.UITransform', 'cc.Button', 'cc.Sprite'],
+    components: ['cc.Button', 'cc.Sprite'],
     children: [{ type: 'cc.Label', name: 'Label' }],
   },
   'cc.Canvas': {
-    components: ['cc.UITransform', 'cc.Canvas', 'cc.Widget'],
+    components: ['cc.Canvas', 'cc.Widget'],
     children: [{ type: 'cc.Camera', name: 'Camera' }],
   },
   'cc.EditBox': {
-    components: ['cc.UITransform', 'cc.Sprite', 'cc.EditBox'],
+    components: ['cc.Sprite', 'cc.EditBox'],
     children: [{ type: 'cc.Label', name: 'PLACEHOLDER_LABEL' }, { type: 'cc.Label', name: 'TEXT_LABEL' }],
   },
   'cc.Layout': {
-    components: ['cc.UITransform', 'cc.Layout'],
+    components: ['cc.Layout'],
   },
   'cc.PageView': {
-    components: ['cc.UITransform', 'cc.Sprite', 'cc.PageView'],
+    components: ['cc.Sprite', 'cc.PageView'],
     children: [{ type: 'PageViewMask', name: 'view' }, { type: 'cc.PageViewIndicator', name: 'indicator' }],
   },
   'cc.PageViewIndicator': {
-    components: ['cc.UITransform', 'cc.PageViewIndicator'],
+    components: ['cc.PageViewIndicator'],
   },
   'PageViewMask': {
-    components: ['cc.UITransform', 'cc.Mask', 'cc.Graphics'],
+    components: ['cc.Mask', 'cc.Graphics'],
     children: [{ type: 'PageViewLayout', name: 'content' }],
   },
   'PageViewLayout': {
-    components: ['cc.UITransform', 'cc.Layout'],
+    components: ['cc.Layout'],
     children: [{ type: 'PageViewItem', name: 'page1' }, { type: 'PageViewItem', name: 'page2' }, { type: 'PageViewItem', name: 'page3' }],
   },
   'PageViewItem': {
-    components: ['cc.UITransform', 'cc.Sprite'],
+    components: ['cc.Sprite'],
   },
   'cc.ProgressBar': {
-    components: ['cc.UITransform', 'cc.Sprite', 'cc.ProgressBar'],
+    components: ['cc.Sprite', 'cc.ProgressBar'],
     children: [{ type: 'cc.Sprite', name: 'Bar' }],
   },
   'cc.RichText': {
-    components: ['cc.UITransform', 'cc.RichText'],
+    components: ['cc.RichText'],
   },
 
   'cc.ScrollView': {
-    components: ['cc.UITransform', 'cc.Sprite', 'cc.ScrollView',],
+    components: ['cc.Sprite', 'cc.ScrollView',],
     children: [{ type: 'ScrollViewBar', name: 'scrollBar' }, { type: 'ScrollViewMask', name: 'view' }],
   },
   'ScrollViewBar': {
-    components: ['cc.UITransform', 'cc.Sprite', 'cc.Widget'],
+    components: ['cc.Sprite', 'cc.Widget'],
     children: [{ type: 'ScrollViewSubBar', name: 'bar' }],
   },
   'ScrollViewSubBar': {
-    components: ['cc.UITransform', 'cc.Sprite', 'cc.Widget'],
+    components: ['cc.Sprite', 'cc.Widget'],
   },
   'ScrollViewMask': {
-    components: ['cc.UITransform', 'cc.Mask', 'cc.Graphics'],
+    components: ['cc.Mask', 'cc.Graphics'],
     children: [{ type: 'ScrollViewContent', name: 'content' }],
   },
   'ScrollViewContent': {
-    components: ['cc.UITransform', 'cc.Layout'],
+    components: ['cc.Layout'],
     children: [{ type: 'ScrollViewContentItem', name: 'item' }],
   },
   'ScrollViewContentItem': {

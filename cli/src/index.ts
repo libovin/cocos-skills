@@ -17,6 +17,10 @@ import {
 } from './lib/client.js';
 import { MODULE_DESCRIPTIONS, ACTION_DESCRIPTIONS } from './lib/module-descriptions.js';
 import { getActionDetails } from './lib/action-details.js';
+import { initPipeline } from './lib/init-pipeline.js';
+
+// Initialize the processing pipeline (register validators, preprocessors, postprocessors)
+initPipeline();
 
 /**
  * Check if user is asking for module or action help

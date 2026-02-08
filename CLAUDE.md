@@ -37,19 +37,66 @@ cocos-skills asset-db create-asset db://assets/config.json
 
 ## Architecture
 
-### Three-Layer Design
+### Request Processing Pipeline
 
-1. **CLI Layer** (`cli/src/index.ts`): Commander-based interface that parses commands and forwards to client
-2. **Client Layer** (`cli/src/lib/client.ts`): HTTP communication with Cocos Creator via `CocosClient` class
-3. **Validation Layer** (`cli/src/lib/validator.ts`, `cli/src/lib/validators/`): Module/action validation and parameter validation
+The project uses a four-stage request processing pipeline:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. Validator (参数校验)                                     │
+│     - 同步执行                                               │
+│     - 验证参数格式、类型、必填项                              │
+│     - 失败时抛出 ValidationError                              │
+├─────────────────────────────────────────────────────────────┤
+│  2. Preprocessor (前置处理)                                  │
+│     - 异步执行                                               │
+│     - 修改/补充参数（如生成默认值、检测循环）                 │
+│     - 返回处理后的 params                                    │
+├─────────────────────────────────────────────────────────────┤
+│  3. API Call (HTTP 请求)                                    │
+│     - 发送处理后的参数到 Cocos Creator HTTP Server           │
+├─────────────────────────────────────────────────────────────┤
+│  4. Postprocessor (后置处理)                                 │
+│     - 异步执行                                               │
+│     - 处理 API 返回结果（如补充子节点、组件信息）             │
+│     - 返回处理后的 ApiResponse                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Directory Structure
+
+```
+cli/src/lib/
+├── pipeline/                    # 请求处理管道核心
+│   ├── index.ts                # 管道入口
+│   ├── types.ts                # 类型定义
+│   ├── validator.ts            # 参数校验器管理
+│   ├── preprocessor.ts         # 前置处理器管理
+│   ├── postprocessor.ts        # 后置处理器管理
+│   └── pipeline.ts             # 管道协调器
+├── validators/                  # 参数校验器实现
+│   ├── registry.ts             # 校验器注册表
+│   ├── scene/                  # scene 模块校验器
+│   └── asset-db/               # asset-db 模块校验器
+├── preprocessors/               # 前置处理器实现
+│   ├── index.ts                # 前置处理器注册表
+│   ├── scene/                  # scene 模块前置处理器
+│   └── asset-db/               # asset-db 模块前置处理器
+├── postprocessors/              # 后置处理器实现
+│   ├── index.ts                # 后置处理器注册表
+│   └── scene/                  # scene 模块后置处理器
+├── client.ts                   # CocosClient 类
+├── validator.ts                # 模块/动作校验（检查是否有效）
+├── init-pipeline.ts            # 管道初始化
+└── ...
+```
 
 ### Key Patterns
 
 - **Type-Driven Development**: All modules and actions are defined in `VALID_MODULES` constant in `cli/src/types.ts`
 - **Singleton Client**: Global `CocosClient` instance cached in `client.ts`; use `getClient()` to access
-- **Validator Pattern**: Module/action validation in `validator.ts`; parameter validators organized by module in `validators/{module}/`
-- **Action Details**: Structured documentation in `details/{module}.ts` files (description, parameters, examples)
-- **Module Details Export**: `details/index.ts` aggregates all module details for the CLI help system
+- **Pipeline Pattern**: Four-stage processing pipeline with clear separation of concerns
+- **Registry Pattern**: Validators, preprocessors, and postprocessors are registered in centralized registries
 
 ### Adding a New Action
 
@@ -57,16 +104,25 @@ When adding a new action to a module:
 
 1. **Add to VALID_MODULES** in `cli/src/types.ts`
 2. **Add to module details** in `cli/src/lib/details/{module}.ts` (description, parameters, examples)
-3. **Add parameter validator** (optional) in `cli/src/lib/validators/{module}/{action}.validator.ts`
-4. **Register validator** in `cli/src/lib/validators/index.ts`
+3. **Add processor** (optional):
+   - **Validator** (参数校验): `cli/src/lib/validators/{module}/{action}.validator.ts`
+   - **Preprocessor** (前置处理): `cli/src/lib/preprocessors/{module}/{action}.preprocessor.ts`
+   - **Postprocessor** (后置处理): `cli/src/lib/postprocessors/{module}/{action}.postprocessor.ts`
+4. **Register processor** in the corresponding `registry.ts` or `index.ts`
 5. **Run verification**: `node scripts/verify-actions.mjs` to sync with cocos-http executor.controller.ts
 
 ### Communication Flow
 
 ```
-CLI Command → validateModuleAction() → validateActionParams() →
-CocosClient.execute() → HTTP POST → Cocos Creator HTTP Server →
-ApiResponse { success, data, error }
+CLI Command → CocosClient.execute()
+  → validateModuleAction() [检查模块/动作是否有效]
+  → processRequest()
+    → Validator [参数校验，同步]
+    → Preprocessor [前置处理，异步]
+  → HTTP POST to Cocos Creator HTTP Server
+  → processResponse()
+    → Postprocessor [后置处理，异步]
+  → ApiResponse { success, data, error }
 ```
 
 ### Server Configuration
@@ -98,15 +154,21 @@ This allows the client to automatically select the correct server URL from multi
 
 | File | Purpose |
 |------|---------|
-| `cli/src/index.ts` | CLI entry point (commander-based) |
+| `cli/src/index.ts` | CLI entry point (commander-based), initializes pipeline |
 | `cli/src/types.ts` | Type definitions and `VALID_MODULES` const |
 | `cli/src/lib/client.ts` | `CocosClient` class and global convenience functions |
-| `cli/src/lib/validator.ts` | Module/action validation with caching |
-| `cli/src/lib/param-validators.ts` | Parameter validation dispatcher |
+| `cli/src/lib/validator.ts` | Module/action validation (check if valid) |
+| `cli/src/lib/init-pipeline.ts` | Pipeline initialization |
+| `cli/src/lib/pipeline/` | Request processing pipeline core |
+| `cli/src/lib/pipeline/pipeline.ts` | Pipeline orchestration |
+| `cli/src/lib/pipeline/validator.ts` | Parameter validator manager |
+| `cli/src/lib/pipeline/preprocessor.ts` | Preprocessor manager |
+| `cli/src/lib/pipeline/postprocessor.ts` | Postprocessor manager |
+| `cli/src/lib/validators/` | Parameter validator implementations |
+| `cli/src/lib/preprocessors/` | Preprocessor implementations |
+| `cli/src/lib/postprocessors/` | Postprocessor implementations |
 | `cli/src/lib/details/index.ts` | Aggregates all module details |
 | `cli/src/lib/details/{module}.ts` | Per-module action documentation |
-| `cli/src/lib/validators/{module}/{action}.validator.ts` | Parameter validators |
-| `cli/src/lib/validators/index.ts` | Re-exports all validators |
 | `cli/src/lib/config.ts` | Server URL configuration loading |
 | `cli/src/lib/asset-templates.ts` | Default asset data generators |
 | `cli/src/lib/UuidService.ts` | UUID generation service |

@@ -192,20 +192,45 @@ export const sceneDetails: ModuleActionDetails = {
       'cocos-skills scene set-parent \'{"uuids":["节点UUID"],"parent":"父节点UUID"}\'',
       'cocos-skills scene set-parent \'{"uuids":["节点UUID"],"parent":"父节点UUID","index":0}\'',
     ],
-    notes: '改变节点的层级关系，支持批量移动多个节点。uuids 是要移动的节点 UUID 数组，parent 是新父节点的 UUID，index 是可选的插入位置（默认添加到末尾）。不能将节点移动到其子孙节点下。重要：修改场景后需要调用 save-scene 保存到磁盘',
+    notes: `改变节点的层级关系，支持批量移动多个节点。uuids 是要移动的节点 UUID 数组，parent 是新父节点的 UUID，index 是可选的插入位置（默认添加到末尾）。
+
+**循环检测校验：**
+- 系统会自动检测并阻止会形成循环引用的节点移动操作
+- 不能将节点移动到其子孙节点下（例如：不能将父节点移动到其子节点下）
+- 如果检测到循环，会抛出错误提示具体的冲突节点
+
+示例错误提示：
+"无法将节点 xxx 移动到 yyy 下：节点 xxx 是节点 yyy 的祖先节点，这会形成循环引用"
+
+重要：修改场景后需要调用 save-scene 保存到磁盘`,
   },
   'create-node': {
     description: '创建新节点',
     parameters: [
-      { name: 'options', type: 'object', required: true, description: '节点配置对象，包含 parent, name 等属性' },
+      { name: 'options', type: 'object', required: true, description: '节点配置对象，可选包含 parent(父节点UUID)、name(节点名称)、type(节点类型) 等' },
     ],
     examples: [
       'cocos-skills scene create-node \'{}\'',
       'cocos-skills scene create-node \'{"name": "NewNode"}\'',
-      'cocos-skills scene create-node \'{"parent": "节点UUID"}\'',
-      'cocos-skills scene create-node \'{"parent": "节点UUID", "name": "ChildNode"}\'',
+      'cocos-skills scene create-node \'{"parent": "父节点UUID", "name": "ChildNode"}\'',
+      'cocos-skills scene create-node \'{"type": "cc.Sprite", "name": "MySprite"}\'',
+      'cocos-skills scene create-node \'{"type": "cc.Canvas"}\'',
+      'cocos-skills scene create-node \'{"type": "cc.Button", "name": "Btn"}\'',
     ],
-    notes: '参数必须是 JSON 对象格式。options 包含: parent(父节点UUID，不指定时添加到场景根节点), name(节点名称，不指定时自动生成如 New Node)。默认值: 位置(0,0,0), 旋转(0,0,0), 缩放(1,1,1), 组件(空数组)。注意: type 和 position 参数在验证器中支持但服务器端未实现，不会生效。如需添加组件，请使用 create-component 命令。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
+    notes: `创建新节点并返回节点 UUID。
+
+options 可选属性：
+- parent: 父节点 UUID，不指定时添加到场景根节点
+- name: 节点名称，不指定时自动生成
+- type: 节点类型，指定后会自动添加相应组件和子节点
+
+支持的 type 类型：
+- 基础类型: cc.Camera
+- 2D 对象: cc.Graphics, cc.Label, cc.Mask, cc.Sprite, cc.ParticleSystem2D, cc.TiledMap
+- UI 组件: cc.Button, cc.Canvas, cc.EditBox, cc.Layout, cc.PageView, cc.ProgressBar, cc.RichText, cc.ScrollView, cc.Slider, cc.Toggle, cc.VideoPlayer, cc.WebView, cc.Widget
+- 3D 对象: cc.MeshRenderer, cc.Terrain
+
+使用 type 创建节点时会自动添加所需的组件和子节点结构（如 cc.Button 会自动添加 Sprite 和 Label 子节点）。默认值：位置(0,0,0)、旋转(0,0,0)、缩放(1,1,1)。重要：修改场景后需要调用 save-scene 保存到磁盘`,
   },
   'remove-node': {
     description: '删除节点及其所有子节点',
@@ -313,10 +338,46 @@ export const sceneDetails: ModuleActionDetails = {
     notes: '返回节点的详细信息，包括：\n- 基本属性：name（名称）、active（是否激活）、locked（是否锁定）、type（类型）、path（路径）\n- 变换属性：position（位置）、rotation（旋转）、scale（缩放）\n- 组件信息：__comps__ 字段包含所有组件的详细信息，每个组件包含 type（组件类型）、uuid（组件 UUID）、enabled（是否启用）、value（组件属性值）和 extends（继承的类）\n- 预制体信息：prefab 字段包含预制体状态信息\n- 父节点信息：parent 字段包含父节点的 UUID',
   },
   'query-node-tree': {
-    description: '查询场景的完整节点树结构',
-    parameters: [],
-    examples: ['cocos-skills scene query-node-tree'],
-    notes: '返回场景的完整层级结构，包含所有节点和子节点关系',
+    description: '查询场景的节点树结构',
+    parameters: [
+      { name: 'filter', type: 'string|object', required: false, description: '过滤选项。可以是预设名称（minimal/basic/shallow/full）或选项对象。选项对象包含：maxDepth（最大深度）、only（字段列表，字符串或数组）、withComponents（是否包含组件）、onlyActive（仅激活节点）' },
+    ],
+    examples: [
+      'cocos-skills scene query-node-tree',
+      'cocos-skills scene query-node-tree minimal',
+      'cocos-skills scene query-node-tree basic',
+      'cocos-skills scene query-node-tree shallow',
+      'cocos-skills scene query-node-tree \'{"maxDepth":2}\'',
+      'cocos-skills scene query-node-tree \'{"only":"uuid,name,path"}\'',
+      'cocos-skills scene query-node-tree \'{"only":["uuid","name","active"]}\'',
+      'cocos-skills scene query-node-tree \'{"withComponents":false}\'',
+      'cocos-skills scene query-node-tree \'{"onlyActive":true}\'',
+    ],
+    notes: `返回场景的节点层级结构，每个节点包含 uuid、name、children 等属性。
+
+**预设配置 (Presets)：**
+- \`minimal\` - 仅 uuid 和 name（最精简）
+- \`basic\` - uuid、name、path、active（基本信息）
+- \`shallow\` - 第一层节点，不含组件（浅层查询）
+- \`full\` - 完整信息，含组件（等同于默认行为）
+
+**选项参数：**
+- \`maxDepth\`: 数字 | null，最大深度（0 = 仅根节点，1 = 根节点+子节点，null = 无限制）
+- \`only\`: 字符串或数组，指定包含的字段（字符串支持逗号分隔，如 "uuid,name,path"）
+- \`withComponents\`: 布尔值，是否包含 __comps__ 组件信息（默认不包含）
+- \`onlyActive\`: 布尔值，是否仅包含激活的节点（默认 false）
+
+**使用示例：**
+1. 完整树（默认）：\`cocos-skills scene query-node-tree\`
+2. 使用预设：\`cocos-skills scene query-node-tree minimal\`
+3. 自定义深度：\`cocos-skills scene query-node-tree '{"maxDepth":2}'\`
+4. 指定字段（字符串）：\`cocos-skills scene query-node-tree '{"only":"uuid,name,active"}'\`
+5. 指定字段（数组）：\`cocos-skills scene query-node-tree '{"only":["uuid","name"]}'\`
+6. 仅激活节点：\`cocos-skills scene query-node-tree '{"onlyActive":true}'\`
+7. 组合选项：\`cocos-skills scene query-node-tree '{"maxDepth":1,"only":"uuid,name","onlyActive":true}'\`
+
+**兼容旧参数名：**
+仍支持旧参数名 \`depth\`、\`fields\`、\`includeComponents\`、\`includeInactive\`，会自动转换为新参数。`,
   },
   'query-nodes-by-asset-uuid': {
     description: '查询所有使用指定资源的节点',

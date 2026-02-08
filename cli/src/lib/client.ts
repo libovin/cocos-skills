@@ -6,9 +6,7 @@
 import { request } from '../utils/http.js';
 import { loadServerUrl, getDefaultServerUrl, parseServerUrl } from './config.js';
 import { validateModuleAction, invalidateCache } from './validator.js';
-import { validateActionParams, hasParamValidation } from './param-validators.js';
-import { preprocessRequest } from './preprocessor-manager.js';
-import { getChildNodesForNodeType } from './node-preprocessor.js';
+import { processRequest, processResponse } from './pipeline/pipeline.js';
 import type { ApiResponse } from '../types.js';
 
 /**
@@ -105,66 +103,28 @@ export class CocosClient {
   ): Promise<ApiResponse> {
     const shouldValidate = validate ?? this.validate;
 
-    const preprocessorResult = await preprocessRequest(module, action, params, this);
-    const processedParams = preprocessorResult.params;
-
+    // Validate module and action
     if (shouldValidate) {
       validateModuleAction(module, action, false);
-
-      if (hasParamValidation(module, action)) {
-        validateActionParams(module, action, processedParams);
-      }
     }
 
+    // Process request through pipeline (validator -> preprocessor)
+    const pipelineResult = await processRequest(module, action, params, this);
+    const processedParams = pipelineResult.params;
+
+    // Make API call
     const result = await this._request('POST', `/api/${module}/${action}`, {
       params: processedParams,
     });
 
-    let finalResult = result;
-    if (preprocessorResult.postProcess) {
-      finalResult = await preprocessorResult.postProcess(result);
-    }
-
-    if (module === 'scene' && action === 'create-node' && finalResult.success && finalResult.data) {
-      const options = params[0] as Record<string, unknown>;
-      const type = options?.type as string;
-
-      if (type && typeof type === 'string') {
-        const children = getChildNodesForNodeType(type);
-        // Handle both object { uuid: string } and string uuid formats
-        const nodeUuid = typeof finalResult.data === 'string' ? finalResult.data : (finalResult.data as any).uuid;
-        if (children.length > 0 && nodeUuid) {
-          const createdChildren: Array<{ type: string; name?: string; uuid: string }> = [];
-
-          for (const childConfig of children) {
-            const childParams: Record<string, unknown> = { parent: nodeUuid, type: childConfig.type };
-            if (childConfig.name) {
-              childParams.name = childConfig.name;
-            }
-            const childResult = await this.execute(
-              'scene',
-              'create-node',
-              [childParams],
-              false
-            );
-
-            // Handle both object { uuid: string } and string uuid formats
-            const childUuid = typeof childResult.data === 'string' ? childResult.data : (childResult.data as any)?.uuid;
-            if (childResult.success && childUuid) {
-              createdChildren.push({ type: childConfig.type, name: childConfig.name, uuid: childUuid });
-            }
-          }
-
-          if (createdChildren.length > 0) {
-            // Convert data to object if it's a string
-            if (typeof finalResult.data === 'string') {
-              finalResult.data = { uuid: finalResult.data };
-            }
-            (finalResult.data as any).children = createdChildren;
-          }
-        }
-      }
-    }
+    // Process response through postprocessor
+    const finalResult = await processResponse(
+      module,
+      action,
+      result,
+      params,
+      this
+    );
 
     return finalResult;
   }

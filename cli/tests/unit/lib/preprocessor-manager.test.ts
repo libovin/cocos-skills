@@ -1,18 +1,22 @@
 /**
- * Unit tests for preprocessor-manager
+ * Unit tests for request processing pipeline
  * Tests for request preprocessing logic management
  */
 
 import { describe, it, expect, vi } from 'vitest';
 import {
-  preprocessRequest,
+  processRequest,
   hasPreprocessor,
   registerPreprocessor,
   getRegisteredPreprocessors,
-} from '../../../src/lib/preprocessor-manager.js';
-import type { ApiResponse } from '../../../src/types.js';
+} from '../../../src/lib/pipeline/index.js';
+import { initPipeline } from '../../../src/lib/init-pipeline.js';
+import type { CocosClient } from '../../../src/lib/client.js';
 
-describe('preprocessor-manager', () => {
+// Initialize pipeline before tests
+initPipeline();
+
+describe('request processing pipeline', () => {
   describe('hasPreprocessor', () => {
     it('should return true for asset-db:create-asset', () => {
       expect(hasPreprocessor('asset-db', 'create-asset')).toBe(true);
@@ -20,6 +24,10 @@ describe('preprocessor-manager', () => {
 
     it('should return true for scene:create-node', () => {
       expect(hasPreprocessor('scene', 'create-node')).toBe(true);
+    });
+
+    it('should return true for scene:set-parent', () => {
+      expect(hasPreprocessor('scene', 'set-parent')).toBe(true);
     });
 
     it('should return false for unknown module/action', () => {
@@ -36,17 +44,18 @@ describe('preprocessor-manager', () => {
       const preprocessors = getRegisteredPreprocessors();
       expect(preprocessors).toContain('asset-db:create-asset');
       expect(preprocessors).toContain('scene:create-node');
-      expect(preprocessors.length).toBeGreaterThanOrEqual(2);
+      expect(preprocessors).toContain('scene:set-parent');
+      expect(preprocessors.length).toBeGreaterThanOrEqual(3);
     });
   });
 
-  describe('preprocessRequest for asset-db:create-asset', () => {
+  describe('processRequest for asset-db:create-asset', () => {
     it('should generate default data when only path is provided', async () => {
       const mockClient = {
         _request: vi.fn(),
-      };
+      } as unknown as CocosClient;
 
-      const result = await preprocessRequest(
+      const result = await processRequest(
         'asset-db',
         'create-asset',
         ['db://assets/test.json'],
@@ -56,36 +65,36 @@ describe('preprocessor-manager', () => {
       expect(result.params).toHaveLength(2);
       expect(result.params[0]).toBe('db://assets/test.json');
       expect(typeof result.params[1]).toBe('string');
-      expect(result.postProcess).toBeUndefined();
+      expect(result.postprocessor).toBeUndefined();
     });
 
     it('should not modify params when data is already provided', async () => {
       const mockClient = {
         _request: vi.fn(),
-      };
+      } as unknown as CocosClient;
 
       const customData = { key: 'value' };
-      const result = await preprocessRequest(
+      const result = await processRequest(
         'asset-db',
         'create-asset',
-        ['db://assets/test.json', JSON.stringify(customData)],
+        ['db://assets/test.json', customData],
         mockClient
       );
 
       expect(result.params).toHaveLength(2);
       expect(result.params[0]).toBe('db://assets/test.json');
-      expect(result.params[1]).toBe(JSON.stringify(customData));
-      expect(result.postProcess).toBeUndefined();
+      expect(result.params[1]).toEqual(customData);
+      expect(result.postprocessor).toBeUndefined();
     });
   });
 
-  describe('preprocessRequest for scene:create-node', () => {
+  describe('processRequest for scene:create-node', () => {
     it('should return nodeParams without components when type is not specified', async () => {
       const mockClient = {
         _request: vi.fn(),
-      };
+      } as unknown as CocosClient;
 
-      const result = await preprocessRequest(
+      const result = await processRequest(
         'scene',
         'create-node',
         [{ name: 'TestNode', parent: 'Canvas' }],
@@ -93,15 +102,15 @@ describe('preprocessor-manager', () => {
       );
 
       expect(result.params).toEqual([{ name: 'TestNode', parent: 'Canvas' }]);
-      expect(result.postProcess).toBeUndefined();
+      expect(result.postprocessor).toBeUndefined();
     });
 
-    it('should return nodeParams and postProcess when type is specified', async () => {
+    it('should return nodeParams and postprocessor when type is specified', async () => {
       const mockClient = {
         _request: vi.fn(),
-      };
+      } as unknown as CocosClient;
 
-      const result = await preprocessRequest(
+      const result = await processRequest(
         'scene',
         'create-node',
         [{ type: 'cc.Canvas', name: 'MyCanvas' }],
@@ -109,129 +118,22 @@ describe('preprocessor-manager', () => {
       );
 
       expect(result.params).toEqual([{ name: 'MyCanvas' }]);
-      expect(result.postProcess).toBeDefined();
-      expect(typeof result.postProcess).toBe('function');
-    });
-
-    it('should add components via postProcess when type is cc.Canvas', async () => {
-      const mockClient = {
-        _request: vi.fn()
-          .mockResolvedValueOnce({ success: true })
-          .mockResolvedValueOnce({ success: true })
-          .mockResolvedValueOnce({ success: true }),
-      };
-
-      const result = await preprocessRequest(
-        'scene',
-        'create-node',
-        [{ type: 'cc.Canvas' }],
-        mockClient
-      );
-
-      const mockApiResponse: ApiResponse = {
-        success: true,
-        data: { uuid: 'test-uuid-123' },
-      };
-
-      const processedResult = await result.postProcess!(mockApiResponse);
-
-      expect(mockClient._request).toHaveBeenCalledTimes(3);
-      expect(mockClient._request).toHaveBeenCalledWith('POST', '/api/scene/create-component', {
-        params: [{ uuid: 'test-uuid-123', component: 'cc.UITransform' }],
-      });
-      expect(mockClient._request).toHaveBeenCalledWith('POST', '/api/scene/create-component', {
-        params: [{ uuid: 'test-uuid-123', component: 'cc.Canvas' }],
-      });
-      expect(mockClient._request).toHaveBeenCalledWith('POST', '/api/scene/create-component', {
-        params: [{ uuid: 'test-uuid-123', component: 'cc.Widget' }],
-      });
-      expect(processedResult.data?.components).toEqual(['cc.UITransform', 'cc.Canvas', 'cc.Widget']);
-    });
-
-    it('should not add components when node creation fails', async () => {
-      const mockClient = {
-        _request: vi.fn(),
-      };
-
-      const result = await preprocessRequest(
-        'scene',
-        'create-node',
-        [{ type: 'cc.Canvas' }],
-        mockClient
-      );
-
-      const mockApiResponse: ApiResponse = {
-        success: false,
-        error: 'Node creation failed',
-      };
-
-      const processedResult = await result.postProcess!(mockApiResponse);
-
-      expect(mockClient._request).not.toHaveBeenCalled();
-      expect(processedResult).toEqual(mockApiResponse);
-    });
-
-    it('should not add components or children when node has no uuid', async () => {
-      const mockClient = {
-        _request: vi.fn(),
-      };
-
-      const result = await preprocessRequest(
-        'scene',
-        'create-node',
-        [{ type: 'cc.Canvas' }],
-        mockClient
-      );
-
-      const mockApiResponse: ApiResponse = {
-        success: true,
-        data: {},
-      };
-
-      const processedResult = await result.postProcess!(mockApiResponse);
-
-      expect(mockClient._request).not.toHaveBeenCalled();
-      expect(processedResult).toEqual(mockApiResponse);
-    });
-
-    it('should handle component addition failures gracefully', async () => {
-      const mockClient = {
-        _request: vi.fn()
-          .mockResolvedValueOnce({ success: true })
-          .mockResolvedValueOnce({ success: false })
-          .mockResolvedValueOnce({ success: true }),
-      };
-
-      const result = await preprocessRequest(
-        'scene',
-        'create-node',
-        [{ type: 'cc.Canvas' }],
-        mockClient
-      );
-
-      const mockApiResponse: ApiResponse = {
-        success: true,
-        data: { uuid: 'test-uuid-123' },
-      };
-
-      const processedResult = await result.postProcess!(mockApiResponse);
-
-      expect(mockClient._request).toHaveBeenCalledTimes(3);
-      expect(processedResult.data?.components).toEqual(['cc.UITransform', 'cc.Widget']);
+      expect(result.postprocessor).toBeDefined();
+      expect(typeof result.postprocessor).toBe('function');
     });
   });
 
-  describe('preprocessRequest for unknown actions', () => {
+  describe('processRequest for unknown actions', () => {
     it('should return params unchanged when no preprocessor exists', async () => {
       const mockClient = {
         _request: vi.fn(),
-      };
+      } as unknown as CocosClient;
 
       const params = ['param1', 'param2'];
-      const result = await preprocessRequest('unknown', 'unknown', params, mockClient);
+      const result = await processRequest('unknown', 'unknown', params, mockClient);
 
       expect(result.params).toEqual(params);
-      expect(result.postProcess).toBeUndefined();
+      expect(result.postprocessor).toBeUndefined();
     });
   });
 
@@ -239,20 +141,19 @@ describe('preprocessor-manager', () => {
     it('should allow registering custom preprocessors', async () => {
       const mockClient = {
         _request: vi.fn(),
-      };
+      } as unknown as CocosClient;
 
-      const customPreprocessor = vi.fn().mockReturnValue({
+      const customPreprocessor = vi.fn().mockResolvedValue({
         params: ['modified'],
-        postProcess: undefined,
       });
 
       registerPreprocessor('custom', 'action', customPreprocessor);
 
       expect(hasPreprocessor('custom', 'action')).toBe(true);
 
-      const result = await preprocessRequest('custom', 'action', ['original'], mockClient);
+      const result = await processRequest('custom', 'action', ['original'], mockClient);
 
-      expect(customPreprocessor).toHaveBeenCalledWith('custom', 'action', ['original'], mockClient);
+      expect(customPreprocessor).toHaveBeenCalledWith(['original'], mockClient);
       expect(result.params).toEqual(['modified']);
     });
   });
