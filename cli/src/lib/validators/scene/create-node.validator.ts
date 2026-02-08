@@ -15,7 +15,7 @@ export function validateCreateNode(params: unknown[]): void {
     throw new ValidationError('scene', 'create-node', 'params', '参数必须是对象类型');
   }
 
-  const { parent, name } = options as Record<string, unknown>;
+  const { parent, name, type } = options as Record<string, unknown>;
 
   if (parent !== undefined && typeof parent !== 'string') {
     throw new ValidationError('scene', 'create-node', 'parent', '必须是字符串类型');
@@ -23,5 +23,9 @@ export function validateCreateNode(params: unknown[]): void {
 
   if (name !== undefined && typeof name !== 'string') {
     throw new ValidationError('scene', 'create-node', 'name', '必须是字符串类型');
+  }
+
+  if (type !== undefined && typeof type !== 'string') {
+    throw new ValidationError('scene', 'create-node', 'type', '必须是字符串类型');
   }
 }

@@ -7,7 +7,8 @@ import { request } from '../utils/http.js';
 import { loadServerUrl, getDefaultServerUrl, parseServerUrl } from './config.js';
 import { validateModuleAction, invalidateCache } from './validator.js';
 import { validateActionParams, hasParamValidation } from './param-validators.js';
-import { generateDefaultAssetData } from './asset-templates.js';
+import { preprocessRequest } from './preprocessor-manager.js';
+import { getChildNodesForNodeType } from './node-preprocessor.js';
 import type { ApiResponse } from '../types.js';
 
 /**
@@ -104,27 +105,68 @@ export class CocosClient {
   ): Promise<ApiResponse> {
     const shouldValidate = validate ?? this.validate;
 
-    // Pre-process for create-asset command: generate default data if only path is provided
-    if (module === 'asset-db' && action === 'create-asset') {
-      if (params.length === 1 && typeof params[0] === 'string') {
-        const path = params[0] as string;
-        const defaultData = generateDefaultAssetData(path);
-        params = [path, defaultData];
-      }
-    }
+    const preprocessorResult = await preprocessRequest(module, action, params, this);
+    const processedParams = preprocessorResult.params;
 
     if (shouldValidate) {
       validateModuleAction(module, action, false);
 
-      // Validate params if validator exists
       if (hasParamValidation(module, action)) {
-        validateActionParams(module, action, params);
+        validateActionParams(module, action, processedParams);
       }
     }
 
-    return this._request('POST', `/api/${module}/${action}`, {
-      params,
+    const result = await this._request('POST', `/api/${module}/${action}`, {
+      params: processedParams,
     });
+
+    let finalResult = result;
+    if (preprocessorResult.postProcess) {
+      finalResult = await preprocessorResult.postProcess(result);
+    }
+
+    if (module === 'scene' && action === 'create-node' && finalResult.success && finalResult.data) {
+      const options = params[0] as Record<string, unknown>;
+      const type = options?.type as string;
+
+      if (type && typeof type === 'string') {
+        const children = getChildNodesForNodeType(type);
+        // Handle both object { uuid: string } and string uuid formats
+        const nodeUuid = typeof finalResult.data === 'string' ? finalResult.data : (finalResult.data as any).uuid;
+        if (children.length > 0 && nodeUuid) {
+          const createdChildren: Array<{ type: string; name?: string; uuid: string }> = [];
+
+          for (const childConfig of children) {
+            const childParams: Record<string, unknown> = { parent: nodeUuid, type: childConfig.type };
+            if (childConfig.name) {
+              childParams.name = childConfig.name;
+            }
+            const childResult = await this.execute(
+              'scene',
+              'create-node',
+              [childParams],
+              false
+            );
+
+            // Handle both object { uuid: string } and string uuid formats
+            const childUuid = typeof childResult.data === 'string' ? childResult.data : (childResult.data as any)?.uuid;
+            if (childResult.success && childUuid) {
+              createdChildren.push({ type: childConfig.type, name: childConfig.name, uuid: childUuid });
+            }
+          }
+
+          if (createdChildren.length > 0) {
+            // Convert data to object if it's a string
+            if (typeof finalResult.data === 'string') {
+              finalResult.data = { uuid: finalResult.data };
+            }
+            (finalResult.data as any).children = createdChildren;
+          }
+        }
+      }
+    }
+
+    return finalResult;
   }
 
   /**

@@ -355,7 +355,6 @@ export const sceneDetails: ModuleActionDetails = {
       { name: 'scriptName', type: 'string', required: false, description: '脚本名称（可选）' },
     ],
     examples: [
-      'cocos-skills scene query-classes \'{}\'',
       'cocos-skills scene query-classes \'{"extends": "cc.Component"}\'',
       'cocos-skills scene query-classes \'{"extends": "cc.Node"}\'',
       'cocos-skills scene query-classes \'{"extends": "cc.Sprite"}\'',
