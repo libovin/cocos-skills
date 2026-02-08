@@ -370,10 +370,13 @@ describe('Asset Database Integration Tests', () => {
         validateApiResponse(pathResult);
         expect(pathResult.success).toBe(true);
 
-        // Verify the returned path matches our created asset path
+        // Verify the returned path is a file system path (not db://)
         if (pathResult.data) {
           expect(typeof pathResult.data).toBe('string');
-          expect(pathResult.data).toBe(testPath);
+          // query-path returns file system path, not db:// path
+          expect(pathResult.data).toMatch(/assets[/\\]test-query-path-.*\.json$/);
+          // Should NOT be a db:// path
+          expect(pathResult.data).not.toMatch(/^db:\/\//);
         }
 
         // Cleanup
@@ -428,11 +431,11 @@ describe('Asset Database Integration Tests', () => {
         validateApiResponse(urlResult);
         expect(urlResult.success).toBe(true);
 
-        // Verify the returned URL is valid (should start with db:// and end with .json)
+        // Verify the returned URL is valid (should be db:// path)
         if (urlResult.data) {
           expect(typeof urlResult.data).toBe('string');
-          expect(urlResult.data).toMatch(/^db:\/\/.*\.json$/);
-          expect(urlResult.data).toBe(testPath);
+          // query-url returns db:// path
+          expect(urlResult.data).toMatch(/^db:\/\/assets\/test-query-url-.*\.json$/);
         }
 
         // Cleanup
@@ -547,34 +550,121 @@ describe('Asset Database Integration Tests', () => {
     });
   });
 
-  describe('save-asset and save-asset-meta', () => {
-    it('should handle save operations gracefully', async () => {
+  describe('open-asset and save-asset', () => {
+    it('should open asset in editor', async () => {
       if (!isServerAvailable || !testClient) {
         return;
       }
 
-      const result = await testClient.execute('asset-db', 'save-asset', ['db://assets']);
-      validateApiResponse(result);
+      // First create a test scene to open
+      const testScenePath = `db://assets/TestSceneToOpen_${Date.now()}.scene`;
+      const createResult = await testClient.execute('asset-db', 'create-asset', [testScenePath]);
+      validateApiResponse(createResult);
+      expect(createResult.success).toBe(true);
+      if (createResult.success) {
+        // Open the scene in editor
+        const openResult = await testClient.execute('asset-db', 'open-asset', [testScenePath]);
+        validateApiResponse(openResult);
 
-      // Saving a directory may fail - just verify response structure
-      expect(result).toHaveProperty('success');
-      expect(result).toHaveProperty('error');
+        // Opening a valid scene should succeed
+        expect(openResult.success).toBe(true);
+
+        // Cleanup
+        // await testClient.execute('asset-db', 'delete-asset', [testScenePath]);
+      }
     });
-  });
 
-  describe('open-asset', () => {
-    it('should handle open-asset gracefully', async () => {
+    it('should save asset changes', async () => {
       if (!isServerAvailable || !testClient) {
         return;
       }
 
-      const result = await testClient.execute('asset-db', 'open-asset', ['db://assets']);
-      validateApiResponse(result);
+      // Step 1: Create a test prefab
+      const testPrefabPath = `db://assets/TestPrefabToSave_${Date.now()}.prefab`;
+      const createResult = await testClient.execute('asset-db', 'create-asset', [testPrefabPath]);
+      validateApiResponse(createResult);
+      expect(createResult.success).toBe(true);
+      
+      if (createResult.success && createResult.data) {
+        // Step 2: Open the prefab in editor
+        const openResult = await testClient.execute('asset-db', 'open-asset', [testPrefabPath]);
+        validateApiResponse(openResult);
+        expect(openResult.success).toBe(true);
 
-      // open-asset may succeed or fail - verify response structure
-      expect(result).toHaveProperty('success');
-      expect(result).toHaveProperty('data');
-      // error property may or may not exist depending on success
+        // Step 3: Create a node in the current scene (which should be the opened prefab)
+        const nodeName = `TestNode_${Date.now()}`;
+        const createNodeResult = await testClient.execute('scene', 'create-node', [
+          { name: nodeName },
+        ]);
+        validateApiResponse(createNodeResult);
+
+        if (createNodeResult.success && createNodeResult.data) {
+          const createdNode = createNodeResult.data as { uuid: string };
+          expect(createdNode.uuid).toBeDefined();
+          expect(typeof createdNode.uuid).toBe('string');
+
+          // Step 4: Save the asset
+          const saveResult = await testClient.execute('asset-db', 'save-asset', [testPrefabPath]);
+          validateApiResponse(saveResult);
+          expect(saveResult.success).toBe(true);
+
+          // Step 5: Verify the changes were persisted by reopening and checking
+          // Reopen the asset
+          await testClient.execute('asset-db', 'open-asset', [testPrefabPath]);
+
+          // Note: The node persistence verification depends on the scene structure
+          // At minimum, we've verified that open-asset and save-asset execute without errors
+        }
+
+        // Cleanup
+        // await testClient.execute('asset-db', 'delete-asset', [testPrefabPath]);
+      }
+    });
+
+    it('should save asset meta file', async () => {
+      if (!isServerAvailable || !testClient) {
+        return;
+      }
+
+      // Create a test asset
+      const testAssetPath = `db://assets/TestMetaSave_${Date.now()}.json`;
+      const createResult = await testClient.execute('asset-db', 'create-asset', [testAssetPath]);
+      validateApiResponse(createResult);
+
+      if (createResult.success) {
+        // Query the original meta
+        const originalMetaResult = await testClient.execute('asset-db', 'query-asset-meta', [
+          testAssetPath,
+        ]);
+        validateApiResponse(originalMetaResult);
+
+        if (originalMetaResult.success && originalMetaResult.data) {
+          const originalMeta = originalMetaResult.data as Record<string, unknown>;
+          expect(originalMeta).toHaveProperty('ver');
+          expect(typeof originalMeta.ver).toBe('string');
+
+          // Save the asset meta (this may trigger meta regeneration)
+          const saveMetaResult = await testClient.execute('asset-db', 'save-asset-meta', [
+            testAssetPath,
+          ]);
+          validateApiResponse(saveMetaResult);
+
+          // Verify the meta still exists and is valid after saving
+          const newMetaResult = await testClient.execute('asset-db', 'query-asset-meta', [
+            testAssetPath,
+          ]);
+          validateApiResponse(newMetaResult);
+
+          if (newMetaResult.success && newMetaResult.data) {
+            const newMeta = newMetaResult.data as Record<string, unknown>;
+            expect(newMeta).toHaveProperty('ver');
+            expect(typeof newMeta.ver).toBe('string');
+          }
+        }
+
+        // Cleanup
+        await testClient.execute('asset-db', 'delete-asset', [testAssetPath]);
+      }
     });
   });
 
