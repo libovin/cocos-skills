@@ -106,24 +106,14 @@ export class SceneFixture {
 
       // Create test scene if it doesn't exist
       if (!existingScene.success) {
+        // Only pass the path - the preprocessor will auto-generate
+        // the correct scene template based on the .scene extension
         const createResult = await this.client.execute('asset-db', 'create-asset', [
           this.testScenePath,
-          {
-            _name: this.testSceneName,
-            scene: {
-              autoReleaseAssets: false,
-              _name: this.testSceneName,
-              _id: ' IntegrationTest',
-              children: [],
-              globals: {
-                lightmaps: [],
-                custom: {},
-              },
-            },
-          },
         ]);
 
         if (!createResult.success) {
+          console.warn(`Failed to create test scene: ${createResult.error}`);
           return null;
         }
       }
