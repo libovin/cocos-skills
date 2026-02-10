@@ -63,60 +63,134 @@ UUID/路径转换：
 注意：原场景文件保持不变，未保存的更改会保存到原文件中`,
     },
     'set-property': {
-        description: '设置节点或组件属性值',
+        description: '设置节点或组件属性值（支持节点属性、组件属性、组件引用绑定等）',
         parameters: [
-            { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
-            { name: 'path', type: 'string', required: true, description: '属性路径。节点属性直接使用属性名（如 position、rotation、scale），组件属性使用 __comps__.索引.属性名（如 __comps__.0._color、__comps__.1._contentSize）' },
-            { name: 'dump', type: 'object', required: true, description: '属性值对象，必须包含 value 和 type 字段。例如：{"value": {"r":255,"g":0,"b":0,"a":255}, "type": "cc.Color"}' },
+            { name: 'uuid', type: 'string', required: true, description: '节点 UUID。可通过 query-node-tree 获取节点的 uuid 字段' },
+            { name: 'path', type: 'string', required: true, description: '属性路径。节点属性直接使用属性名（如 position、rotation、scale），组件属性使用 __comps__.索引.属性名 格式（如 __comps__.0._color、__comps__.1._string）。支持的路径格式：position、rotation、scale、eulerAngles、angle、_contentSize、__comps__.0._color、__comps__.1._string 等' },
+            { name: 'dump', type: 'object', required: true, description: '属性值对象，必须包含 value 和 type 两个字段。例如：{"value": {"r":255,"g":0,"b":0,"a":255}, "type": "cc.Color"} 或 {"value": "Hello", "type": "cc.String"}。注意：value 和 type 必须匹配，例如 cc.Color 类型的 value 必须是包含 r/g/b/a 字段的对象' },
         ],
         examples: [
-            'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "position", "dump": {"value": {"x":0,"y":0,"z":10}, "type": "cc.Vec3"}}\'',
-            'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "rotation", "dump": {"value": {"x":0,"y":0,"z":0,"w":1}, "type": "cc.Quat"}}\'',
-            'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "scale", "dump": {"value": {"x":1,"y":1,"z":1}, "type": "cc.Vec3"}}\'',
-            'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "__comps__.0._color", "dump": {"value": {"r":255,"g":0,"b":0,"a":255}, "type": "cc.Color"}}\'',
-            'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "__comps__.1._contentSize", "dump": {"value": {"width":200,"height":200}, "type": "cc.Size"}}\'',
+            // 节点属性示例
+            'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "position", "dump": {"value": {"x":100,"y":200,"z":0}, "type": "cc.Vec3"}}\'',
+            'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "scale", "dump": {"value": {"x":2,"y":2,"z":1}, "type": "cc.Vec3"}}\'',
+            'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "eulerAngles", "dump": {"value": {"x":0,"y":0,"z":45}, "type": "cc.Vec3"}}\'',
+            'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "angle", "dump": {"value": 90, "type": "cc.Number"}}\'',
+            // 组件属性示例 - Sprite
+            'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "__comps__.0._color", "dump": {"value": {"r":255,"g":255,"b":255,"a":255}, "type": "cc.Color"}}\'',
+            'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "__comps__.1._contentSize", "dump": {"value": {"width":200,"height":100}, "type": "cc.Size"}}\'',
+            // 组件属性示例 - Label
+            'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "__comps__.1._string", "dump": {"value": "Hello World", "type": "cc.String"}}\'',
+            'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "__comps__.1._fontSize", "dump": {"value": 32, "type": "cc.Number"}}\'',
+            // 组件引用绑定示例
+            'cocos-skills scene set-property \'{"uuid": "父节点UUID", "path": "__comps__.0.target", "dump": {"value": {"uuid": "目标节点UUID"}, "type": "cc.Node"}}\'',
+            'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "__comps__.0.tilePrefab", "dump": {"value": {"uuid": "预制体资源UUID"}, "type": "cc.Prefab"}}\'',
         ],
-        notes: `参数必须是 JSON 对象格式，包含 uuid、path 和 dump 字段。dump 必须包含 value 和 type 字段。
+        notes: `**参数格式详解：**
 
-路径格式说明：
-- 节点属性：直接使用属性名，如 position、rotation、scale、eulerAngles、angle
-- 组件属性：使用 __comps__.索引.属性名 格式，如 __comps__.0._color、__comps__.1._contentSize
-- 组件索引从 0 开始，需要先使用 query-node 获取组件列表
+参数必须是 JSON 对象格式，包含 uuid、path 和 dump 三个字段：
+\`\`\`json
+{
+  "uuid": "节点UUID",
+  "path": "属性路径",
+  "dump": {
+    "value": "属性值",
+    "type": "类型标识"
+  }
+}
+\`\`\`
 
-支持的 type 类型：
-- cc.Vec3: 三维向量，用于 position、scale 等，格式 {"x":0,"y":0,"z":0}
-- cc.Quat: 四元数，用于 rotation，格式 {"x":0,"y":0,"z":0,"w":1}
-- cc.Vec2: 二维向量，格式 {"x":0,"y":0}
-- cc.Color: 颜色，格式 {"r":255,"g":0,"b":0,"a":255}，范围 0-255
-- cc.Size: 尺寸，格式 {"width":100,"height":100}
-- cc.Node: 节点引用，格式 {"uuid":"节点UUID"}
-- cc.String: 字符串
-- cc.Number: 数字
-- cc.Boolean: 布尔值
-- cc.Asset: 资源引用，格式 {"uuid":"资源UUID"}
-- cc.SpriteFrame: 精灵帧引用
-- cc.Material: 材质引用
-- cc.Prefab: 预制体引用
-- cc.Texture2D: 纹理引用
-- cc.Font: 字体引用
-- cc.AudioClip: 音频片段引用
+**路径格式说明：**
 
-常用节点属性示例：
-- position: 节点位置
-- rotation: 节点旋转（四元数）
-- scale: 节点缩放
-- eulerAngles: 欧拉角旋转
-- angle: 二维旋转角度
+1. **节点属性**（直接使用属性名）：
+   - \`position\`: 节点位置 (cc.Vec3)
+   - \`rotation\`: 节点旋转四元数 (cc.Quat)
+   - \`scale\`: 节点缩放 (cc.Vec3)
+   - \`eulerAngles\`: 欧拉角旋转 (cc.Vec3)
+   - \`angle\`: 2D 旋转角度 (cc.Number)
+   - \`_contentSize\`: 内容尺寸 (cc.Size) - UITransform 组件属性
+   - \`_active\`: 是否激活 (cc.Boolean)
 
-常用组件属性示例：
-- cc.Sprite._color: 精灵颜色
-- cc.Sprite.spriteFrame: 精灵帧
-- cc.UITransform._contentSize: 内容尺寸
-- cc.UITransform._anchorPoint: 锚点
-- cc.Label.string: 文本内容
-- cc.Label.fontSize: 字体大小
+2. **组件属性**（使用 __comps__.索引.属性名 格式）：
+   - \`__comps__.0._color\`: 第一个组件的颜色
+   - \`__comps__.1._string\`: 第二个组件的文本内容
+   - \`__comps__.2.spriteFrame\`: 第三个组件的精灵帧
 
-重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新`,
+**组件索引查找方法：**
+使用 \`cocos-skills scene query-node <节点UUID>\` 查看节点的 components 字段，按照数组顺序确定索引（从 0 开始）。
+
+**支持的 type 类型及格式：**
+
+| 类型 | 格式 | 说明 | 示例 |
+|------|------|------|------|
+| cc.Vec3 | {"x":0,"y":0,"z":0} | 三维向量 | position, scale |
+| cc.Quat | {"x":0,"y":0,"z":0,"w":1} | 四元数（旋转） | rotation |
+| cc.Vec2 | {"x":0,"y":0} | 二维向量 | 锚点、尺寸分量 |
+| cc.Color | {"r":255,"g":0,"b":0,"a":255} | 颜色 (0-255) | Sprite 颜色 |
+| cc.Size | {"width":100,"height":100} | 尺寸 | 内容尺寸 |
+| cc.Node | {"uuid":"节点UUID"} | 节点引用 | UI 组件目标节点 |
+| cc.String | "任意字符串" | 字符串 | Label 文本 |
+| cc.Number | 123 或 123.45 | 数字 | fontSize, angle |
+| cc.Boolean | true 或 false | 布尔值 | active, enabled |
+| cc.Asset | {"uuid":"资源UUID"} | 资源引用 | spriteFrame, material |
+| cc.Prefab | {"uuid":"预制体UUID"} | 预制体引用 | tilePrefab |
+
+**常用属性路径速查表：**
+
+| 组件类型 | 属性路径 | 类型 | 说明 |
+|----------|----------|------|------|
+| 节点 | position | cc.Vec3 | 世界坐标位置 |
+| 节点 | _lpos | cc.Vec3 | 本地坐标位置 |
+| 节点 | scale | cc.Vec3 | 缩放比例 |
+| 节点 | eulerAngles | cc.Vec3 | 欧拉角旋转（度） |
+| UITransform | _contentSize | cc.Size | 内容尺寸 |
+| UITransform | _anchorPoint | cc.Vec2 | 锚点位置 |
+| Sprite | _color | cc.Color | 颜色 |
+| Sprite | spriteFrame | cc.SpriteFrame | 精灵帧 |
+| Label | _string | cc.String | 文本内容 |
+| Label | _fontSize | cc.Number | 字体大小 |
+| Label | _color | cc.Color | 文本颜色 |
+| Button | _interactable | cc.Boolean | 是否可交互 |
+| Button | clickEvents | Array | 点击事件数组 |
+
+**组件引用绑定示例：**
+
+\`\`\`javascript
+// 绑定自定义脚本组件的节点引用
+cocos-skills scene set-property '{"uuid":"Game2048节点UUID","path":"__comps__.1.grid","dump":{"value":{"uuid":"GridContainer节点UUID"},"type":"cc.Node"}}'
+
+// 绑定预制体资源引用
+cocos-skills scene set-property '{"uuid":"GridContainer节点UUID","path":"__comps__.0.tilePrefab","dump":{"value":{"uuid":"Tile预制体资源UUID"},"type":"cc.Prefab"}}'
+
+// 绑定 Label 文本
+cocos-skills scene set-property '{"uuid":"Title节点UUID","path":"__comps__.1._string","dump":{"value":"2048","type":"cc.String"}}'
+\`\`\`
+
+**特殊注意事项：**
+
+1. **修改后保存**：修改场景后必须调用 \`save-scene\` 保存到磁盘，否则刷新编辑器后更改会丢失。
+2. **组件索引**：组件索引从 0 开始，使用 \`query-node\` 查看完整的组件列表。
+3. **类型匹配**：dump.type 必须与 dump.value 的结构匹配，否则会返回错误。
+4. **节点 vs 组件属性**：节点属性（如 position）直接使用属性名，组件属性需要加 __comps__.前缀。
+5. **引用类型**：绑定节点引用时使用 cc.Node 类型，绑定资源引用时使用对应的资源类型（如 cc.Prefab）。
+
+**完整工作流程示例：**
+
+\`\`\`bash
+# 1. 查询节点信息，获取 UUID 和组件列表
+cocos-skills scene query-node-tree minimal
+
+# 2. 设置节点位置
+cocos-skills scene set-property '{"uuid":"xxx","path":"position","dump":{"value":{"x":100,"y":200,"z":0},"type":"cc.Vec3"}}'
+
+# 3. 设置 Label 文本
+cocos-skills scene set-property '{"uuid":"xxx","path":"__comps__.1._string","dump":{"value":"Hello","type":"cc.String"}}'
+
+# 4. 设置 Sprite 颜色
+cocos-skills scene set-property '{"uuid":"xxx","path":"__comps__.0._color","dump":{"value":{"r":255,"g":0,"b":0,"a":255},"type":"cc.Color"}}'
+
+# 5. 保存场景
+cocos-skills scene save-scene
+\`\`\``,
     },
     'reset-property': {
         description: '重置属性为默认值',

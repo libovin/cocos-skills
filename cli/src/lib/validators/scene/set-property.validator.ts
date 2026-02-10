@@ -59,9 +59,9 @@ export function validateSetProperty(params: unknown[]): void {
     throw new ValidationError('scene', 'set-property', 'dump.type', 'type 不能为空');
   }
 
-  const validTypes = ['cc.Vec3', 'cc.Quat', 'cc.Vec2', 'cc.Color', 'cc.Size', 'cc.Node', 'cc.String', 'cc.Number', 'cc.Boolean', 'cc.Asset', 'cc.SpriteFrame', 'cc.Material', 'cc.Prefab', 'cc.Texture2D', 'cc.Font', 'cc.AudioClip'];
+  // const validTypes = ['cc.Vec3', 'cc.Quat', 'cc.Vec2', 'cc.Color', 'cc.Size', 'cc.Node', 'cc.String', 'cc.Number', 'cc.Boolean', 'cc.Asset', 'cc.SpriteFrame', 'cc.Material', 'cc.Prefab', 'cc.Texture2D', 'cc.Font', 'cc.AudioClip'];
   
-  if (!validTypes.includes(dumpObj.type as string)) {
-    throw new ValidationError('scene', 'set-property', 'dump.type', `无效的 type 值: ${dumpObj.type}。支持的类型: ${validTypes.join(', ')}`);
-  }
+  // if (!validTypes.includes(dumpObj.type as string)) {
+  //   throw new ValidationError('scene', 'set-property', 'dump.type', `无效的 type 值: ${dumpObj.type}。支持的类型: ${validTypes.join(', ')}`);
+  // }
 }
