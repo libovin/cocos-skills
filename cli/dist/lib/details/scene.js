@@ -300,14 +300,34 @@ options 可选属性：
         description: '添加组件到节点',
         parameters: [
             { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
-            { name: 'component', type: 'string', required: true, description: '组件类型，如 cc.Sprite、cc.Widget' },
+            { name: 'component', type: 'string', required: true, description: '组件类型，支持内置组件（如 cc.Sprite、cc.Widget）和自定义脚本组件（直接使用脚本类名，如 Game2048）' },
         ],
         examples: [
             'cocos-skills scene create-component \'{"uuid": "节点UUID", "component": "cc.Widget"}\'',
             'cocos-skills scene create-component \'{"uuid": "节点UUID", "component": "cc.Camera"}\'',
             'cocos-skills scene create-component \'{"uuid": "节点UUID", "component": "cc.Animation"}\'',
+            'cocos-skills scene create-component \'{"uuid":"2fMrHXUIVPnrsHYNLyMXI6","component": "Game2048"}\'',
         ],
-        notes: '参数必须是 JSON 对象格式，包含 uuid 和 component 字段。为节点添加指定类型的组件。一个节点可以有多个组件，但每种类型只能有一个（除了 cc.Component）。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
+        notes: `参数必须是 JSON 对象格式，包含 uuid 和 component 字段。为节点添加指定类型的组件。
+
+**支持的组件类型：**
+1. **内置组件**：使用 cc. 前缀，如 cc.Sprite、cc.Widget、cc.Camera、cc.Animation 等
+2. **自定义脚本组件**：使用 @ccclass 装饰器中注册的名称
+
+自定义脚本示例：
+\`\`\`typescript
+import { _decorator, Component } from 'cc';
+const { ccclass } = _decorator;
+
+@ccclass('Game2048')  // 这里的名称 'Game2048' 就是 component 参数要使用的值
+export class Game2048 extends Component {
+    // ...
+}
+\`\`\`
+
+一个节点可以有多个组件，但每种类型只能有一个（除了 cc.Component）。添加自定义脚本组件时，component 参数使用 @ccclass 装饰器中声明的名称。
+
+重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新`,
     },
     'remove-component': {
         description: '从节点移除组件',

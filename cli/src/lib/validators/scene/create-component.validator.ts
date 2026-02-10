@@ -29,7 +29,7 @@ export function validateCreateComponent(params: unknown[]): void {
     throw new ValidationError('scene', 'create-component', 'component', '不能为空');
   }
 
-  if (!component.startsWith('cc.')) {
-    throw new ValidationError('scene', 'create-component', 'component', '必须以 cc. 开头，如 cc.Sprite、cc.Widget');
-  }
+  // if (!component.startsWith('cc.')) {
+  //   throw new ValidationError('scene', 'create-component', 'component', '必须以 cc. 开头，如 cc.Sprite、cc.Widget');
+  // }
 }

@@ -17,9 +17,13 @@
 为节点添加指定类型的组件。
 
 ```bash
+# 内置组件示例
 cocos-skills scene create-component '{"uuid": "节点UUID", "component": "cc.Widget"}'
 cocos-skills scene create-component '{"uuid": "节点UUID", "component": "cc.Camera"}'
 cocos-skills scene create-component '{"uuid": "节点UUID", "component": "cc.Animation"}'
+
+# 自定义脚本组件示例
+cocos-skills scene create-component '{"uuid":"2fMrHXUIVPnrsHYNLyMXI6","component": "Game2048"}'
 ```
 
 ### 参数（JSON 对象）
@@ -27,9 +31,11 @@ cocos-skills scene create-component '{"uuid": "节点UUID", "component": "cc.Ani
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | uuid | string | 是 | 节点 UUID |
-| component | string | 是 | 组件类型（如 `cc.Sprite`、`cc.Widget`） |
+| component | string | 是 | 组件类型，支持内置组件（如 `cc.Sprite`、`cc.Widget`）和自定义脚本组件（使用 `@ccclass` 装饰器中注册的名称） |
 
-### 常用组件类型
+### 支持的组件类型
+
+#### 内置组件
 
 | 组件 | 说明 |
 |------|------|
@@ -44,6 +50,25 @@ cocos-skills scene create-component '{"uuid": "节点UUID", "component": "cc.Ani
 | cc.UITransform | UI 变换组件 |
 | cc.RigidBody2D | 2D 刚体组件 |
 | cc.Collider2D | 2D 碰撞体组件 |
+
+#### 自定义脚本组件
+
+自定义脚本组件使用 `@ccclass` 装饰器中注册的名称：
+
+```typescript
+import { _decorator, Component } from 'cc';
+const { ccclass } = _decorator;
+
+@ccclass('Game2048')  // 这里的名称 'Game2048' 就是 component 参数要使用的值
+export class Game2048 extends Component {
+    // ...
+}
+```
+
+使用时：
+```bash
+cocos-skills scene create-component '{"uuid": "节点UUID", "component": "Game2048"}'
+```
 
 ## remove-component
 
@@ -153,13 +178,16 @@ cocos-skills scene query-node-tree
 # 1. 获取节点信息，查看现有组件
 cocos-skills scene query-node-tree
 
-# 2. 添加组件
+# 2. 添加内置组件
 cocos-skills scene create-component '{"uuid": "节点UUID", "component": "cc.Sprite"}'
 
-# 3. 查询组件详情
+# 3. 添加自定义脚本组件（使用 @ccclass 注册的名称）
+cocos-skills scene create-component '{"uuid": "节点UUID", "component": "Game2048"}'
+
+# 4. 查询组件详情
 cocos-skills scene query-component <组件UUID>
 
-# 4. 保存场景
+# 5. 保存场景
 cocos-skills scene save-scene
 ```
 
