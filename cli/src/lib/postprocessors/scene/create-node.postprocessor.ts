@@ -3,7 +3,7 @@
  * 在创建节点后添加组件和子节点
  */
 
-import { getChildNodesForNodeType } from '../../node-preprocessor.js';
+import { getComponentsForNodeType, getChildNodesForNodeType } from '../../node-preprocessor.js';
 import type { PostprocessorFn } from '../../pipeline/types.js';
 import type { CocosClient } from '../../client.js';
 import type { ApiResponse } from '../../../types.js';
@@ -14,7 +14,7 @@ import type { ApiResponse } from '../../../types.js';
  */
 export const sceneCreateNodePostprocessor: PostprocessorFn = async (
   result: ApiResponse,
-  originalParams: unknown[],
+  params: unknown[],
   client: CocosClient
 ): Promise<ApiResponse> => {
   if (!result.success || !result.data) {
@@ -27,12 +27,19 @@ export const sceneCreateNodePostprocessor: PostprocessorFn = async (
     return result;
   }
 
-  // Get metadata from preprocessor
-  const processedParams = originalParams as unknown[] & { __componentsToAdd?: string[]; __childrenToCreate?: any[] };
-  const componentsToAdd = processedParams.__componentsToAdd;
-  const childrenToCreate = processedParams.__childrenToCreate;
+  // Get type from original params (not processed params)
+  const options = params[0] as Record<string, unknown> | undefined;
+  const type = options?.type;
 
-  if (!componentsToAdd && !childrenToCreate) {
+  if (!type || typeof type !== 'string') {
+    return result;
+  }
+
+  // Get components and children for the node type
+  const componentsToAdd = getComponentsForNodeType(type);
+  const childrenToCreate = getChildNodesForNodeType(type);
+
+  if (componentsToAdd.length === 0 && childrenToCreate.length === 0) {
     return result;
   }
 
@@ -42,13 +49,16 @@ export const sceneCreateNodePostprocessor: PostprocessorFn = async (
   }
 
   // Add components
-  if (componentsToAdd && componentsToAdd.length > 0) {
+  if (componentsToAdd.length > 0) {
     const addedComponents: string[] = [];
 
     for (const component of componentsToAdd) {
-      const addResult = await (client as any)._request('POST', '/api/scene/create-component', {
-        params: [{ uuid: nodeUuid, component }],
-      });
+      const addResult = await client.execute(
+        'scene',
+        'create-component',
+        [{ uuid: nodeUuid, component }],
+        false
+      );
 
       if (addResult.success) {
         addedComponents.push(component);
@@ -59,7 +69,7 @@ export const sceneCreateNodePostprocessor: PostprocessorFn = async (
   }
 
   // Add child nodes (if type requires children)
-  if (childrenToCreate && childrenToCreate.length > 0) {
+  if (childrenToCreate.length > 0) {
     const createdChildren: Array<{ type: string; name?: string; uuid: string }> = [];
 
     for (const childConfig of childrenToCreate) {
@@ -68,7 +78,7 @@ export const sceneCreateNodePostprocessor: PostprocessorFn = async (
         childParams.name = childConfig.name;
       }
 
-      const childResult = await (client as any).execute(
+      const childResult = await client.execute(
         'scene',
         'create-node',
         [childParams],

@@ -192,12 +192,16 @@ function hasValidOptions(options: QueryNodeTreeOptions): boolean {
  */
 export const sceneQueryNodeTreePostprocessor: PostprocessorFn = async (
   result: ApiResponse,
-  originalParams: unknown[],
+  processedParams: unknown[],
   _client: CocosClient
 ): Promise<ApiResponse> => {
   if (!result.success || !result.data) {
     return result;
   }
+
+  // Get original params from metadata (stored by preprocessor)
+  const paramsWithMeta = processedParams as unknown[] & { __originalParams?: unknown[] };
+  const originalParams = paramsWithMeta.__originalParams ?? [];
 
   // Parse options from params
   const params = originalParams.length > 0 ? originalParams[0] : undefined;
@@ -208,12 +212,52 @@ export const sceneQueryNodeTreePostprocessor: PostprocessorFn = async (
     return result;
   }
 
-  // Apply filtering
-  const nodes = result.data as SceneNode[];
-  const filteredNodes = filterTreeNodes(nodes, options);
+  // The API returns a single root node object, not an array
+  // We need to handle the root node's children array
+  const rootNode = result.data as SceneNode;
+
+  if (!rootNode.children || rootNode.children.length === 0) {
+    // No children, return filtered root node
+    const onlyFields = normalizeOnlyFields(options.only);
+    if (onlyFields && onlyFields.length > 0) {
+      const filteredRoot = filterNodeFields(rootNode, onlyFields);
+      filteredRoot.children = [];
+      // Remove components if not requested
+      if (options.withComponents !== true && '__comps__' in filteredRoot) {
+        delete (filteredRoot as Record<string, unknown>).__comps__;
+      }
+      return {
+        ...result,
+        data: filteredRoot,
+      };
+    }
+    return result;
+  }
+
+  // Filter the children array
+  const filteredChildren = filterTreeNodes(rootNode.children, options);
+
+  // Return filtered root node with filtered children
+  const onlyFields = normalizeOnlyFields(options.only);
+  let filteredRoot: SceneNode;
+
+  if (onlyFields && onlyFields.length > 0) {
+    filteredRoot = filterNodeFields(rootNode, onlyFields);
+  } else {
+    // Clone root node
+    const { uuid, name, ...rest } = rootNode;
+    filteredRoot = { uuid, name, ...rest };
+  }
+
+  filteredRoot.children = filteredChildren;
+
+  // Remove components if not requested
+  if (options.withComponents !== true && '__comps__' in filteredRoot) {
+    delete (filteredRoot as Record<string, unknown>).__comps__;
+  }
 
   return {
     ...result,
-    data: filteredNodes,
+    data: filteredRoot,
   };
 };

@@ -9,7 +9,7 @@ import { registerPreprocessor } from '../pipeline/preprocessor.js';
 import { assetDbCreateAssetPreprocessor } from './asset-db/create-asset.preprocessor.js';
 import { assetDbSaveAssetPreprocessor } from './asset-db/save-asset.preprocessor.js';
 import { sceneSetParentPreprocessor } from './scene/set-parent.preprocessor.js';
-import { sceneCreateNodePreprocessor } from './scene/create-node.preprocessor.js';
+import { sceneQueryNodeTreePreprocessor } from './scene/query-node-tree.preprocessor.js';
 
 /**
  * Register all built-in preprocessors
@@ -21,5 +21,5 @@ export function registerBuiltinPreprocessors(): void {
 
   // scene
   registerPreprocessor('scene', 'set-parent', sceneSetParentPreprocessor);
-  registerPreprocessor('scene', 'create-node', sceneCreateNodePreprocessor);
+  registerPreprocessor('scene', 'query-node-tree', sceneQueryNodeTreePreprocessor);
 }
