@@ -2,7 +2,9 @@
 node_modules/
 
 # Build output
-dist/
+# dist/
+# cli/dist/
+# skills/cocos-skills/cli/dist/
 
 # Logs
 *.log

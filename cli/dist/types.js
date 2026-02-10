@@ -1,0 +1,136 @@
+/**
+ * Type definitions for Cocos Creator HTTP API
+ * Ported from scripts/client.py
+ */
+/**
+ * Valid modules and their actions
+ * Ported from scripts/client.py:20-154
+ */
+export const VALID_MODULES = {
+    scene: [
+        'open-scene',
+        'save-scene',
+        'save-as-scene',
+        'close-scene',
+        'set-property',
+        'reset-property',
+        'move-array-element',
+        'remove-array-element',
+        'copy-node',
+        'duplicate-node',
+        'paste-node',
+        'cut-node',
+        'set-parent',
+        'create-node',
+        'remove-node',
+        'reset-node',
+        'reset-component',
+        'restore-prefab',
+        'create-component',
+        'remove-component',
+        'execute-component-method',
+        'execute-scene-script',
+        'snapshot',
+        'snapshot-abort',
+        'soft-reload',
+        'change-gizmo-tool',
+        'query-gizmo-tool-name',
+        'change-gizmo-pivot',
+        'query-gizmo-pivot',
+        'change-gizmo-coordinate',
+        'query-gizmo-coordinate',
+        'change-is2D',
+        'query-is2D',
+        'set-grid-visible',
+        'query-is-grid-visible',
+        'set-icon-gizmo-3d',
+        'query-is-icon-gizmo-3d',
+        'set-icon-gizmo-size',
+        'query-icon-gizmo-size',
+        'focus-camera',
+        'align-with-view',
+        'align-view-with-node',
+        'query-is-ready',
+        'query-node',
+        'query-component',
+        'query-node-tree',
+        'query-nodes-by-asset-uuid',
+        'query-dirty',
+        'query-classes',
+        'query-components',
+        'query-component-has-script',
+        'query-scene-bounds',
+        'is-native',
+    ],
+    'asset-db': [
+        'query-ready',
+        'create-asset',
+        'import-asset',
+        'copy-asset',
+        'move-asset',
+        'delete-asset',
+        'open-asset',
+        'save-asset',
+        'save-asset-meta',
+        'reimport-asset',
+        'refresh-asset',
+        'query-asset-info',
+        'query-missing-asset-info',
+        'query-asset-meta',
+        'query-asset-users',
+        'query-asset-dependencies',
+        'query-path',
+        'query-url',
+        'query-uuid',
+        'query-assets',
+        'generate-available-url',
+    ],
+    project: [
+        'open-settings',
+        'query-config',
+        'set-config',
+    ],
+    builder: [
+        'open',
+        'query-worker-ready',
+    ],
+    engine: [
+        'query-info',
+        'query-engine-info',
+    ],
+    information: [
+        'query-information',
+        'open-information-dialog',
+        'has-dialog',
+        'close-dialog',
+    ],
+    preferences: [
+        'open-settings',
+        'query-config',
+        'set-config',
+    ],
+    program: [
+        'query-program-info',
+        'open-program',
+        'open-url',
+    ],
+    programming: [
+        'query-shared-settings',
+        'query-sorted-plugins',
+    ],
+    server: [
+        'query-ip-list',
+        'query-port',
+    ],
+    device: [
+        'query',
+    ],
+    extension: [
+        'create-extension-template',
+    ],
+};
+/**
+ * All valid modules as an array
+ */
+export const MODULE_NAMES = Object.keys(VALID_MODULES);
+//# sourceMappingURL=types.js.map

@@ -10,9 +10,11 @@
     ".": "./cli/dist/lib/client.js"
   },
   "scripts": {
-    "build": "tsc -p cli/tsconfig.json",
+    "build": "tsc -p cli/tsconfig.json && npm run copy-scripts",
     "dev": "tsc -p cli/tsconfig.json --watch",
     "prepublishOnly": "npm run build",
+    "copy-scripts": "node copy-scripts.mjs",
+    "clean": "node clean.mjs",
     "test": "vitest",
     "test:unit": "vitest run cli/tests/unit",
     "test:integration": "vitest run cli/tests/integration",
