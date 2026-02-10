@@ -307,14 +307,19 @@ options 可选属性：
   'remove-component': {
     description: '从节点移除组件',
     parameters: [
-      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
-      { name: 'component', type: 'string', required: true, description: '组件类型（cid），如 cc.Sprite、cc.Widget' },
+      { name: 'uuid', type: 'string', required: true, description: '组件 UUID（可以通过 query-node-tree 获取节点 components 中的组件 value）' },
     ],
     examples: [
-      'cocos-skills scene remove-component \'{"uuid": "节点UUID", "component": "cc.Widget"}\'',
-      'cocos-skills scene remove-component \'{"uuid": "节点UUID", "component": "cc.BoxCollider2D"}\'',
+      'cocos-skills scene remove-component \'{"uuid": "<组件UUID>"}\'',
     ],
-    notes: '移除指定组件。component 参数使用组件类型（cid），如 cc.Sprite、cc.Widget。注意：移除组件可能会影响节点功能。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新。注意：在某些情况下，remove-component 命令可能不会立即生效，或者无法移除组件。如果遇到这种情况，请尝试在 Cocos Creator 编辑器中手动移除组件',
+    notes: `移除指定组件。
+
+获取组件 UUID 的方法：
+1. 使用 query-node-tree 查看场景节点树
+2. 从节点 components 字段中找到目标组件的 value 字段 即组件的 uuid
+3. 使用组件的 uuid 调用此命令移除
+
+注意：移除组件可能会影响节点功能。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新`,
   },
   'execute-component-method': {
     description: '调用组件的方法',
@@ -357,7 +362,7 @@ options 可选属性：
   'query-node-tree': {
     description: '查询场景的节点树结构',
     parameters: [
-      { name: 'filter', type: 'string|object', required: false, description: '过滤选项。可以是预设名称（minimal/basic/shallow/full）或选项对象。选项对象包含：maxDepth（最大深度）、only（字段列表，字符串或数组）、withComponents（是否包含组件）、onlyActive（仅激活节点）' },
+      { name: 'filter', type: 'string|object', required: false, description: '过滤选项。可以是预设名称（minimal/basic/shallow/full）或选项对象。选项对象包含：maxDepth（最大深度）、only（字段列表，字符串或数组）、onlyActive（仅激活节点）' },
     ],
     examples: [
       'cocos-skills scene query-node-tree',
@@ -365,10 +370,9 @@ options 可选属性：
       'cocos-skills scene query-node-tree basic',
       'cocos-skills scene query-node-tree \'{"only":"uuid,name,path"}\'',
       'cocos-skills scene query-node-tree \'{"only":["uuid","name","active"]}\'',
-      'cocos-skills scene query-node-tree \'{"withComponents":false}\'',
       'cocos-skills scene query-node-tree \'{"onlyActive":true}\'',
     ],
-    notes: `返回场景的节点层级结构，每个节点包含 uuid、name、children 等属性。
+    notes: `返回场景的节点层级结构，每个节点包含 uuid、name、children、components 等属性。
 
 **预设配置 (Presets)：**
 - \`minimal\` - 仅 uuid 和 name（最精简）
@@ -377,7 +381,6 @@ options 可选属性：
 
 **选项参数：**
 - \`only\`: 字符串或数组，指定包含的字段（字符串支持逗号分隔，如 "uuid,name,path"）
-- \`withComponents\`: 布尔值，是否包含 __comps__ 组件信息（默认不包含）
 - \`onlyActive\`: 布尔值，是否仅包含激活的节点（默认 false）
 
 **使用示例：**
@@ -407,13 +410,19 @@ options 可选属性：
   'query-component': {
     description: '查询组件的详细信息',
     parameters: [
-      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
+      { name: 'uuid', type: 'string', required: true, description: '组件 UUID（不是节点 UUID，可以通过 query-node-tree 获取节点 components 中的组件 value）' },
     ],
     examples: [
-      'cocos-skills scene query-component 节点UUID',
-      'cocos-skills scene query-component 根节点UUID',
+      'cocos-skills scene query-component <组件UUID>',
     ],
-    notes: '返回组件的所有属性及其当前值。注意：此命令可能不可用，建议使用 query-node 获取节点组件信息（从 __comps__ 字段）',
+    notes: `返回组件的所有属性及其当前值。
+
+获取组件 UUID 的方法：
+1. 使用 query-node-tree 查看场景节点树（默认包含组件信息）
+2. 从节点 components 字段中找到目标组件的 value 字段 即组件的 uuid
+3. 使用组件的 uuid 字段作为此命令的参数
+
+注意：此命令在某些情况下可能不可用，建议使用 query-node-tree 获取节点组件信息`,
   },
   'query-classes': {
     description: '查询可用的组件类列表',
@@ -438,15 +447,14 @@ options 可选属性：
     notes: '返回所有可用的组件类型列表，包含内置组件和自定义脚本组件。每个组件包含 name、cid、path 等信息。与 query-classes 不同，此命令返回更详细的组件信息，包括组件的路径和资源 UUID',
   },
   'query-component-has-script': {
-    description: '查询节点是否有脚本组件',
+    description: '查询组件是否为脚本组件',
     parameters: [
-      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
+      { name: 'uuid', type: 'string', required: true, description: '组件 UUID（不是节点 UUID，可以通过 query-node-tree 获取节点 components 中的组件 value）' },
     ],
     examples: [
-      'cocos-skills scene query-component-has-script 节点UUID',
-      'cocos-skills scene query-component-has-script 根节点UUID',
+      'cocos-skills scene query-component-has-script <组件UUID>',
     ],
-    notes: '返回布尔值，true 表示节点有脚本组件，false 表示没有。注意：此命令可能不可用，建议使用 query-node 获取节点组件信息并检查 __comps__ 字段',
+    notes: '返回布尔值，true 表示该组件是脚本组件，false 表示不是。注意：此命令在某些情况下可能不可用，建议使用 query-node-tree 获取节点组件信息并检查 components 字段',
   },
   'query-scene-bounds': {
     description: '查询场景的边界信息',
