@@ -15,18 +15,7 @@
       "source": "./skills",
       "strict": false,
       "skills": [
-        "./server",
-        "./scene",
-        "./preferences",
-        "./project",
-        "./asset-db",
-        "./builder",
-        "./device",
-        "./extension",
-        "./engine",
-        "./programming",
-        "./program",
-        "./information"
+        "./cocos-skills"
       ]
     }
   ]
