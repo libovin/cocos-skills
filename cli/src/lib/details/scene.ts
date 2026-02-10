@@ -29,13 +29,10 @@ export const sceneDetails: ModuleActionDetails = {
     notes: '保存当前打开的场景的所有更改。建议在重要操作后调用',
   },
   'save-as-scene': {
-    description: '将场景另存为新文件',
-    parameters: [
-      { name: 'path', type: 'string', required: true, description: '新场景文件路径' },
-    ],
+    description: '将场景另存为新文件, 会弹出文件保存框',
+    parameters: [],
     examples: [
-      'cocos-skills scene save-as-scene db://assets/MainCopy.scene',
-      'cocos-skills scene save-as-scene db://assets/scenes/Level2.scene',
+      'cocos-skills scene save-as-scene',
     ],
     notes: '创建场景副本，新场景将成为当前打开的场景',
   },
@@ -343,8 +340,6 @@ options 可选属性：
       'cocos-skills scene query-node-tree',
       'cocos-skills scene query-node-tree minimal',
       'cocos-skills scene query-node-tree basic',
-      'cocos-skills scene query-node-tree shallow',
-      'cocos-skills scene query-node-tree \'{"maxDepth":2}\'',
       'cocos-skills scene query-node-tree \'{"only":"uuid,name,path"}\'',
       'cocos-skills scene query-node-tree \'{"only":["uuid","name","active"]}\'',
       'cocos-skills scene query-node-tree \'{"withComponents":false}\'',
@@ -355,11 +350,9 @@ options 可选属性：
 **预设配置 (Presets)：**
 - \`minimal\` - 仅 uuid 和 name（最精简）
 - \`basic\` - uuid、name、path、active（基本信息）
-- \`shallow\` - 第一层节点，不含组件（浅层查询）
 - \`full\` - 完整信息，含组件（等同于默认行为）
 
 **选项参数：**
-- \`maxDepth\`: 数字 | null，最大深度（0 = 仅根节点，1 = 根节点+子节点，null = 无限制）
 - \`only\`: 字符串或数组，指定包含的字段（字符串支持逗号分隔，如 "uuid,name,path"）
 - \`withComponents\`: 布尔值，是否包含 __comps__ 组件信息（默认不包含）
 - \`onlyActive\`: 布尔值，是否仅包含激活的节点（默认 false）
@@ -367,14 +360,10 @@ options 可选属性：
 **使用示例：**
 1. 完整树（默认）：\`cocos-skills scene query-node-tree\`
 2. 使用预设：\`cocos-skills scene query-node-tree minimal\`
-3. 自定义深度：\`cocos-skills scene query-node-tree '{"maxDepth":2}'\`
 4. 指定字段（字符串）：\`cocos-skills scene query-node-tree '{"only":"uuid,name,active"}'\`
 5. 指定字段（数组）：\`cocos-skills scene query-node-tree '{"only":["uuid","name"]}'\`
 6. 仅激活节点：\`cocos-skills scene query-node-tree '{"onlyActive":true}'\`
-7. 组合选项：\`cocos-skills scene query-node-tree '{"maxDepth":1,"only":"uuid,name","onlyActive":true}'\`
-
-**兼容旧参数名：**
-仍支持旧参数名 \`depth\`、\`fields\`、\`includeComponents\`、\`includeInactive\`，会自动转换为新参数。`,
+7. 组合选项：\`cocos-skills scene query-node-tree '{"only":"uuid,name","onlyActive":true}'\``,
   },
   'query-nodes-by-asset-uuid': {
     description: '查询所有使用指定资源的节点',
