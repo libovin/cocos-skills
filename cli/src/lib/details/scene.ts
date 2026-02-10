@@ -165,40 +165,39 @@ UUID/路径转换：
   'copy-node': {
     description: '复制节点到剪贴板',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '要复制的节点路径' },
+      { name: 'uuid', type: 'string', required: true, description: '要复制的节点 UUID' },
     ],
     examples: [
-      'cocos-skills scene copy-node /Canvas/Sprite',
-      'cocos-skills scene copy-node /UI/Panel',
+      'cocos-skills scene copy-node <节点UUID>',
     ],
     notes: '将节点复制到系统剪贴板，之后可使用 paste-node 粘贴。包含所有子节点和组件',
   },
   'duplicate-node': {
     description: '复制并粘贴节点（快捷操作）',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '要复制的节点路径' },
+      { name: 'uuid', type: 'string', required: true, description: '要复制的节点 UUID' },
     ],
-    examples: ['cocos-skills scene duplicate-node /Canvas/Sprite'],
+    examples: ['cocos-skills scene duplicate-node <节点UUID>'],
     notes: '相当于 copy-node + paste-node 的组合操作。新节点会自动命名',
   },
   'paste-node': {
     description: '粘贴剪贴板中的节点',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '目标父节点路径' },
+      { name: 'parentUuid', type: 'string', required: true, description: '目标父节点 UUID' },
     ],
     examples: [
-      'cocos-skills scene paste-node /Canvas',
-      'cocos-skills scene paste-node /UI/Container',
+      'cocos-skills scene paste-node \'{"uuids":"节点UUID","target":"目标节点UUID"}\'',
+      'cocos-skills scene paste-node \'{"uuids":["节点UUID"],"target":"目标节点UUID"}\'',
     ],
     notes: '将剪贴板中的节点粘贴为指定父节点的子节点。需要先使用 copy-node 或 cut-node。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
   },
   'cut-node': {
     description: '剪切节点',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '要剪切的节点路径' },
+      { name: 'uuid', type: 'string', required: true, description: '要剪切的节点 UUID' },
     ],
-    examples: ['cocos-skills scene cut-node /Canvas/Sprite'],
-    notes: '将节点剪切到剪贴板，之后可使用 paste-node 或 set-parent 移动到新位置',
+    examples: ['cocos-skills scene cut-node <节点UUID>'],
+    notes: '将节点剪切到剪贴板，之后可使用 paste-node 移动到新位置',
   },
   'set-parent': {
     description: '设置节点的父节点（移动节点）',
@@ -206,8 +205,8 @@ UUID/路径转换：
       { name: 'params', type: 'object', required: true, description: '包含 uuids（节点UUID数组）、parent（父节点UUID）、index（可选，插入位置）的对象' },
     ],
     examples: [
+      'cocos-skills scene set-parent \'{"uuids":"节点UUID","parent":"父节点UUID"}\'',
       'cocos-skills scene set-parent \'{"uuids":["节点UUID"],"parent":"父节点UUID"}\'',
-      'cocos-skills scene set-parent \'{"uuids":["节点UUID"],"parent":"父节点UUID","index":0}\'',
     ],
     notes: `改变节点的层级关系，支持批量移动多个节点。uuids 是要移动的节点 UUID 数组，parent 是新父节点的 UUID，index 是可选的插入位置（默认添加到末尾）。
 
@@ -250,24 +249,29 @@ options 可选属性：
 使用 type 创建节点时会自动添加所需的组件和子节点结构（如 cc.Button 会自动添加 Sprite 和 Label 子节点）。默认值：位置(0,0,0)、旋转(0,0,0)、缩放(1,1,1)。重要：修改场景后需要调用 save-scene 保存到磁盘`,
   },
   'remove-node': {
-    description: '删除节点及其所有子节点',
+    description: '删除节点及其所有子节点（支持单个或批量删除）',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '要删除的节点路径' },
+      { name: 'params', type: 'object', required: true, description: '包含 uuid（节点UUID字符串或数组）的对象' },
     ],
     examples: [
-      'cocos-skills scene remove-node /Canvas/OldNode',
-      'cocos-skills scene remove-node /TempNode',
+      'cocos-skills scene remove-node \'{"uuid":"<节点UUID>"}\'',
+      'cocos-skills scene remove-node \'{"uuid":["<节点UUID1>","<节点UUID2>"]}\'',
     ],
-    notes: '此操作不可撤销。会删除节点及其所有子节点。建议删除前确认无引用。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
+    notes: `此操作不可撤销。会删除节点及其所有子节点。
+
+参数必须是 JSON 对象格式：
+- 单个删除：{"uuid": "节点UUID"}
+- 批量删除：{"uuid": ["节点UUID1", "节点UUID2", ...]}
+
+建议删除前确认无引用。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新`,
   },
   'reset-node': {
     description: '重置节点变换为默认值',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '节点路径' },
+      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
     ],
     examples: [
-      'cocos-skills scene reset-node /Canvas/Sprite',
-      'cocos-skills scene reset-node /Camera',
+      'cocos-skills scene reset-node <节点UUID>',
     ],
     notes: '将 position 重置为 (0,0,0)，rotation 重置为 (0,0,0)，scale 重置为 (1,1,1)。重要：修改场景后需要调用 save-scene 保存到磁盘，否则读取文件时内容不会更新',
   },

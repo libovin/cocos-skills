@@ -11,15 +11,15 @@ export function validateRemoveNode(params: unknown[]): void {
 
   const [path] = params;
 
-  if (typeof path !== 'string') {
-    throw new ValidationError('scene', 'remove-node', 'path', '必须是字符串类型');
-  }
+  // if (typeof path !== 'string') {
+  //   throw new ValidationError('scene', 'remove-node', 'path', '必须是字符串类型');
+  // }
 
-  if (!path.startsWith('/')) {
-    throw new ValidationError('scene', 'remove-node', 'path', '必须是节点路径，以 / 开头（如 /Canvas/OldNode）');
-  }
+  // if (!path.startsWith('/')) {
+  //   throw new ValidationError('scene', 'remove-node', 'path', '必须是节点路径，以 / 开头（如 /Canvas/OldNode）');
+  // }
 
-  if (path === '/') {
-    throw new ValidationError('scene', 'remove-node', 'path', '不能删除根节点');
-  }
+  // if (path === '/') {
+  //   throw new ValidationError('scene', 'remove-node', 'path', '不能删除根节点');
+  // }
 }
