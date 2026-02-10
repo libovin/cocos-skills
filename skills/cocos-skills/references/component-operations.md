@@ -9,9 +9,8 @@
 | `create-component` | 添加组件到节点 |
 | `remove-component` | 从节点移除组件 |
 | `reset-component` | 重置组件属性 |
-| `execute-component-method` | 调用组件方法 |
 | `query-component` | 查询组件详情 |
-| `query-components` | 查询可用组件类型 |
+| `query-component-has-script` | 查询组件是否为脚本组件 |
 
 ## create-component
 
@@ -74,34 +73,23 @@ cocos-skills scene query-node-tree
 将组件的所有属性恢复为引擎默认值。
 
 ```bash
-cocos-skills scene reset-component /Canvas/Sprite cc.Sprite
-cocos-skills scene reset-component /UI/Button cc.Button
+cocos-skills scene reset-component '{"uuid": "<组件UUID>"}'
 ```
 
 ### 参数
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| path | string | 是 | 节点路径 |
-| component | string | 是 | 组件名称 |
+| uuid | string | 是 | 组件 UUID |
 
-## execute-component-method
-
-动态调用组件的公共方法。
+### 获取组件 UUID
 
 ```bash
-cocos-skills scene execute-component-method '{"uuid": "节点UUID", "component": "cc.Sprite", "method": "setContentSize", "args": [100, 100]}'
-cocos-skills scene execute-component-method '{"uuid": "节点UUID", "component": "cc.Label", "method": "string", "args": ["Hello World"]}'
+# 1. 查询节点树获取组件信息
+cocos-skills scene query-node-tree
+
+# 2. 从节点的 components 字段中获取组件 value（即组件UUID）
 ```
-
-### 参数（JSON 对象）
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| uuid | string | 是 | 节点 UUID |
-| component | string | 是 | 组件类型（如 `cc.Sprite`） |
-| method | string | 是 | 方法名称 |
-| args | array | 否 | 方法参数数组 |
 
 ## query-component
 
@@ -117,28 +105,36 @@ cocos-skills scene query-component <组件UUID>
 |------|------|------|------|
 | uuid | string | 是 | 组件 UUID |
 
-## query-components
+## query-component-has-script
 
-查询所有可用的组件类型列表。
+查询组件是否为脚本组件。
 
 ```bash
-cocos-skills scene query-components
+cocos-skills scene query-component-has-script <组件UUID>
 ```
+
+### 参数
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| uuid | string | 是 | 组件 UUID（不是节点 UUID） |
 
 ### 响应
 
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "name": "cc.Sprite",
-      "cid": "cc.Sprite",
-      "path": "cc.Sprite"
-    },
-    ...
-  ]
+  "data": true  // true 表示是脚本组件，false 表示不是
 }
+```
+
+### 获取组件 UUID
+
+```bash
+# 1. 查询节点树获取组件信息
+cocos-skills scene query-node-tree
+
+# 2. 从节点的 components 字段中获取组件 value（即组件UUID）
 ```
 
 ## 组件属性路径
@@ -160,8 +156,8 @@ cocos-skills scene query-node-tree
 # 2. 添加组件
 cocos-skills scene create-component '{"uuid": "节点UUID", "component": "cc.Sprite"}'
 
-# 3. 调用组件方法
-cocos-skills scene execute-component-method '{"uuid": "节点UUID", "component": "cc.Sprite", "method": "setEnabled", "args": [true]}'
+# 3. 查询组件详情
+cocos-skills scene query-component <组件UUID>
 
 # 4. 保存场景
 cocos-skills scene save-scene

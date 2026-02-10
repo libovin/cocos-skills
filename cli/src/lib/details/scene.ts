@@ -278,14 +278,18 @@ options 可选属性：
   'reset-component': {
     description: '重置组件属性为默认值',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '节点路径' },
-      { name: 'component', type: 'string', required: true, description: '组件名称，如 cc.Sprite' },
+      { name: 'uuid', type: 'string', required: true, description: '组件 UUID（可以通过 query-node-tree 获取节点 components 中的组件 value）' },
     ],
     examples: [
-      'cocos-skills scene reset-component /Canvas/Sprite cc.Sprite',
-      'cocos-skills scene reset-component /UI/Button cc.Button',
+      'cocos-skills scene reset-component <组件UUID>',
+      'cocos-skills scene reset-component \'{"uuid": "<组件UUID>"}\'',
     ],
-    notes: '将指定组件的所有属性恢复为引擎默认值',
+    notes: `将指定组件的所有属性恢复为引擎默认值。
+
+获取组件 UUID 的方法：
+1. 使用 query-node-tree 查看场景节点树
+2. 从节点 components 字段中找到目标组件的 value 字段 即组件的 uuid
+3. 使用组件的 uuid 调用此命令重置`,
   },
   'restore-prefab': {
     description: '恢复预制体实例到原始状态',

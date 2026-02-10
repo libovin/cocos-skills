@@ -71,12 +71,12 @@ cocos-skills scene open-scene db://assets/Main.scene
 
 详细文档：[references/](references/)
 
-### 资源创建
+### 资源操作
 
-**详细指南**: [asset-creation.md](references/asset-creation.md)
+**详细指南**: [asset-operations.md](references/asset-operations.md)
 
 ```bash
-# 创建资源文件
+# 创建资源
 cocos-skills asset-db create-asset db://assets/prefabs/Test.prefab
 
 # 导入外部资源
@@ -84,6 +84,12 @@ cocos-skills asset-db import-asset db://assets/sprite.png "C:/path/to/image.png"
 
 # 复制资源
 cocos-skills asset-db copy-asset db://assets/Old.prefab db://assets/New.prefab
+
+# 查询资源信息
+cocos-skills asset-db query-asset-info db://assets/texture.png
+
+# 查询资源使用情况
+cocos-skills asset-db query-asset-users <uuid>
 ```
 
 ### 场景操作
@@ -110,13 +116,16 @@ cocos-skills scene save-scene
 
 ```bash
 # 创建节点
-cocos-skills scene create-node '{"name": "NewNode"}'
+cocos-skills scene create-node '{"parent": "父节点UUID", "name": "ChildNode","type": "cc.Sprite"}'
 
 # 复制节点（使用 UUID）
 cocos-skills scene copy-node <节点UUID>
 
+# 粘贴节点
+cocos-skills scene paste-node '{"uuids":"节点UUID","target":"父节点UUID"}'
+
 # 设置父节点
-cocos-skills scene set-parent '{"uuids":["节点UUID"],"parent":"父节点UUID"}'
+cocos-skills scene set-parent '{"uuids":"节点UUID","parent":"父节点UUID"}'
 
 # 删除节点（使用 UUID）
 cocos-skills scene remove-node '{"uuid":"节点UUID"}'
@@ -135,9 +144,6 @@ cocos-skills scene create-component '{"uuid": "节点UUID", "component": "cc.Spr
 
 # 移除组件
 cocos-skills scene remove-component '{"uuid": "组件UUID"}'
-
-# 调用组件方法
-cocos-skills scene execute-component-method '{"uuid": "节点UUID", "component": "cc.Label", "method": "string", "args": ["Hello"]}'
 ```
 
 ### 属性操作

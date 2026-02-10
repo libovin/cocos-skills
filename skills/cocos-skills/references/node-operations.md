@@ -6,6 +6,7 @@
 
 | 命令 | 功能 |
 |------|------|
+| `query-node-tree` | 查询场景节点树 |
 | `create-node` | 创建新节点 |
 | `remove-node` | 删除节点 |
 | `copy-node` | 复制节点 |
@@ -16,15 +17,70 @@
 | `reset-node` | 重置节点变换 |
 | `restore-prefab` | 恢复预制体 |
 
+## query-node-tree
+
+查询场景的节点树结构，返回节点的层级关系。
+
+```bash
+cocos-skills scene query-node-tree
+cocos-skills scene query-node-tree minimal
+cocos-skills scene query-node-tree basic
+cocos-skills scene query-node-tree '{"only":"uuid,name,path"}'
+cocos-skills scene query-node-tree '{"onlyActive":true}'
+```
+
+### 参数
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| filter | string/object | 否 | 过滤选项 |
+
+### 预设配置
+
+| 预设 | 说明 |
+|------|------|
+| minimal | 仅 uuid 和 name |
+| basic | uuid、name、path、active |
+| full | 完整信息（默认） |
+
+### 选项参数
+
+```json
+{
+  "only": "uuid,name,path",     // 字符串或数组，指定包含的字段
+  "onlyActive": true            // 是否仅包含激活的节点
+}
+```
+
+### 响应
+
+```json
+{
+  "success": true,
+  "data": {
+    "uuid": "根节点UUID",
+    "name": "Canvas",
+    "path": "/Canvas",
+    "active": true,
+    "children": [
+      {
+        "uuid": "子节点UUID",
+        "name": "Sprite",
+        "path": "/Canvas/Sprite",
+        "active": true,
+        "components": [...]
+      }
+    ]
+  }
+}
+```
+
 ## create-node
 
 创建新节点并返回节点 UUID。
 
 ```bash
-cocos-skills scene create-node '{}'
-cocos-skills scene create-node '{"name": "NewNode"}'
-cocos-skills scene create-node '{"parent": "父节点UUID", "name": "ChildNode"}'
-cocos-skills scene create-node '{"type": "cc.Sprite", "name": "MySprite"}'
+cocos-skills scene create-node '{"parent": "父节点UUID", "name": "ChildNode","type": "cc.Sprite"}'
 ```
 
 ### 参数（JSON 对象）
@@ -97,14 +153,19 @@ cocos-skills scene copy-node <节点UUID>
 粘贴剪贴板中的节点。
 
 ```bash
-cocos-skills scene paste-node <父节点UUID>
+# 粘贴单个节点
+cocos-skills scene paste-node '{"uuids":"节点UUID","target":"目标节点UUID"}'
+
+# 粘贴多个节点
+cocos-skills scene paste-node '{"uuids":["节点UUID1","节点UUID2"],"target":"目标节点UUID"}'
 ```
 
-### 参数
+### 参数（JSON 对象）
 
-| 参数 | 类型 | 必填 | 说明 |
+| 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| parentUuid | string | 是 | 目标父节点 UUID |
+| uuids | string/array | 是 | 要粘贴的节点 UUID（单个或数组） |
+| target | string | 是 | 目标父节点 UUID |
 
 ## duplicate-node
 
@@ -139,8 +200,14 @@ cocos-skills scene cut-node <节点UUID>
 设置节点的父节点（移动节点），支持批量移动。
 
 ```bash
-cocos-skills scene set-parent '{"uuids":["节点UUID"],"parent":"父节点UUID"}'
-cocos-skills scene set-parent '{"uuids":["节点UUID"],"parent":"父节点UUID","index":0}'
+# 单个节点
+cocos-skills scene set-parent '{"uuids":"节点UUID","parent":"父节点UUID"}'
+
+# 多个节点
+cocos-skills scene set-parent '{"uuids":["节点UUID1","节点UUID2"],"parent":"父节点UUID"}'
+
+# 指定插入位置
+cocos-skills scene set-parent '{"uuids":"节点UUID","parent":"父节点UUID","index":0}'
 ```
 
 ### 参数（JSON 对象）
@@ -191,13 +258,13 @@ cocos-skills scene restore-prefab <预制体UUID>
 cocos-skills scene query-node-tree
 
 # 2. 创建节点
-cocos-skills scene create-node '{"parent": "<父UUID>", "name": "MyNode"}'
+cocos-skills scene create-node '{"parent": "父UUID", "name": "MyNode"}'
 
 # 3. 复制节点
 cocos-skills scene copy-node <源节点UUID>
 
 # 4. 粘贴节点
-cocos-skills scene paste-node <父节点UUID>
+cocos-skills scene paste-node '{"uuids":"源节点UUID","target":"父节点UUID"}'
 
 # 5. 保存场景
 cocos-skills scene save-scene

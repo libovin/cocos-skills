@@ -12,7 +12,9 @@
 | `save-as-scene` | 另存为新场景 |
 | `close-scene` | 关闭当前场景 |
 | `query-dirty` | 查询是否有未保存的修改 |
-| `query-node-tree` | 查询场景节点树 |
+| `query-classes` | 查询可用的组件类列表 |
+| `query-components` | 查询所有可用的组件类型 |
+| `query-scene-bounds` | 查询场景的边界信息 |
 
 ## query-is-ready
 
@@ -108,39 +110,70 @@ cocos-skills scene query-dirty
 }
 ```
 
-## query-node-tree
+## query-classes
 
-查询场景的节点树结构，返回节点的层级关系。
+查询可用的组件类列表，支持按基类过滤。
 
 ```bash
-cocos-skills scene query-node-tree
-cocos-skills scene query-node-tree minimal
-cocos-skills scene query-node-tree basic
-cocos-skills scene query-node-tree '{"only":"uuid,name,path"}'
-cocos-skills scene query-node-tree '{"onlyActive":true}'
+cocos-skills scene query-classes '{"extends": "cc.Component"}'
+cocos-skills scene query-classes '{"extends": "cc.Node"}'
+cocos-skills scene query-classes '{"extends": "cc.Sprite"}'
+cocos-skills scene query-classes '{"extends": "cc.Renderer"}'
 ```
 
-### 参数
+### 参数（JSON 对象）
 
-| 参数 | 类型 | 必填 | 说明 |
+| 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| filter | string/object | 否 | 过滤选项 |
+| extends | string | 否 | 基类过滤（如 cc.Component、cc.Node） |
+| scriptName | string | 否 | 脚本名称 |
 
-### 预设配置
+### 常用基类
 
-| 预设 | 说明 |
+| 基类 | 说明 |
 |------|------|
-| minimal | 仅 uuid 和 name |
-| basic | uuid、name、path、active |
-| full | 完整信息（默认） |
+| cc.Component | 所有组件 |
+| cc.Node | 节点类型 |
+| cc.Sprite | 精灵组件 |
+| cc.Renderer | 渲染器组件 |
 
-### 选项参数
+## query-components
+
+查询所有可用的组件类型列表（包含内置组件和自定义脚本组件）。
+
+```bash
+cocos-skills scene query-components
+```
+
+### 响应
 
 ```json
 {
-  "only": "uuid,name,path",     // 字符串或数组，指定包含的字段
-  "onlyActive": true            // 是否仅包含激活的节点
+  "success": true,
+  "data": [
+    {
+      "name": "cc.Sprite",
+      "cid": "cc.Sprite",
+      "path": "cc.Sprite"
+    },
+    ...
+  ]
 }
+```
+
+### query-classes vs query-components
+
+| 命令 | 特点 | 适用场景 |
+|------|------|---------|
+| query-classes | 支持基类过滤，返回类信息 | 需要查找特定类型的组件类 |
+| query-components | 返回更详细的组件信息（含路径、UUID） | 需要获取完整的组件列表 |
+
+## query-scene-bounds
+
+查询场景的边界信息。
+
+```bash
+cocos-skills scene query-scene-bounds
 ```
 
 ### 响应
@@ -149,22 +182,13 @@ cocos-skills scene query-node-tree '{"onlyActive":true}'
 {
   "success": true,
   "data": {
-    "uuid": "根节点UUID",
-    "name": "Canvas",
-    "path": "/Canvas",
-    "active": true,
-    "children": [
-      {
-        "uuid": "子节点UUID",
-        "name": "Sprite",
-        "path": "/Canvas/Sprite",
-        "active": true,
-        "components": [...]
-      }
-    ]
+    "min": {"x": 0, "y": 0, "z": 0},
+    "max": {"x": 100, "y": 100, "z": 0}
   }
 }
 ```
+
+返回场景的包围盒信息，包括最小点和最大点坐标。
 
 ## 场景操作流程
 
