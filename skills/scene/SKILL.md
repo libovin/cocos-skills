@@ -33,8 +33,11 @@ from scripts.client import execute
 # 查询场景就绪状态
 execute("scene", "query-is-ready")
 
-# 打开场景
-execute("scene", "open-scene", ["db://assets/scenes/Main.scene"])
+# 查询节点树（获取节点 UUID）
+execute("scene", "query-node-tree")
+
+# 打开节点对应的场景/预制体
+execute("scene", "open-scene", ["节点UUID"])
 
 # 创建节点
 execute("scene", "create-node", ["Canvas/NewNode"])
@@ -53,7 +56,7 @@ execute("scene", "save-scene")
 
 | Action | 功能 | 使用场景 |
 |--------|------|----------|
-| `open-scene` | 打开场景 | 加载并编辑场景 |
+| `open-scene` | 打开节点对应的场景/预制体 | 使用节点 UUID 在编辑器中打开 |
 | `save-scene` | 保存场景 | 保存修改内容 |
 | `save-as-scene` | 另存为场景 | 创建场景副本 |
 | `close-scene` | 关闭场景 | 卸载当前场景 |
@@ -225,8 +228,12 @@ Gizmo 工具和坐标系统控制。
 ### 场景管理
 
 ```python
-# 打开场景
-execute("scene", "open-scene", ["db://assets/scenes/Main.scene"])
+# 查询节点树
+result = execute("scene", "query-node-tree")
+node_uuid = result["data"]["uuid"]
+
+# 打开节点对应的场景/预制体
+execute("scene", "open-scene", [node_uuid])
 
 # 检查场景是否已修改
 execute("scene", "query-dirty")
@@ -314,7 +321,7 @@ execute("scene", "align-with-view", ["node-uuid"])
 
 ## 注意事项
 
-1. **场景切换**: 打开新场景会自动关闭当前场景，未保存的修改会丢失
+1. **场景打开**: 使用 `open-scene` 时需要提供节点 UUID（从 `query-node-tree` 获取），而不是文件路径
 2. **节点 UUID**: 所有节点操作需要提供节点的 UUID
 3. **组件 UUID**: 组件操作需要提供组件的 UUID
 4. **路径格式**: 创建场景时路径必须以 `.scene` 结尾

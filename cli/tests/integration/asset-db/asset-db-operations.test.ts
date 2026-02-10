@@ -201,56 +201,93 @@ describe('Asset Database Integration Tests', () => {
       }
 
       const timestamp = Date.now();
-      const testPath = `db://assets/SaveWorkflow_${timestamp}.json`;
+      const scenePath = `db://assets/SaveWorkflowScene_${timestamp}.scene`;
+      const prefabPath = `db://assets/SaveWorkflowPrefab_${timestamp}.prefab`;
 
-      // ===== Create asset =====
-      const createResult = await testClient.execute('asset-db', 'create-asset', [testPath, '{"key": "initial"}']);
-      validateApiResponse(createResult);
-      if (!createResult.success) {
-        throw new Error(`Create asset failed: ${createResult.error}`);
+      // ===== Test save-asset with .scene file =====
+      // Create scene
+      const createSceneResult = await testClient.execute('asset-db', 'create-asset', [scenePath]);
+      validateApiResponse(createSceneResult);
+      if (!createSceneResult.success) {
+        throw new Error(`Create scene failed: ${createSceneResult.error}`);
       }
 
-      // ===== Open asset =====
-      const openResult = await testClient.execute('asset-db', 'open-asset', [testPath]);
-      validateApiResponse(openResult);
-      if (!openResult.success) {
-        throw new Error(`Open asset failed: ${openResult.error}`);
+      // Open scene
+      const openSceneResult = await testClient.execute('asset-db', 'open-asset', [scenePath]);
+      validateApiResponse(openSceneResult);
+      if (!openSceneResult.success) {
+        throw new Error(`Open scene failed: ${openSceneResult.error}`);
       }
 
-      // ===== Save asset with new content =====
-      const saveResult = await testClient.execute('asset-db', 'save-asset', [testPath, '{"key": "updated"}']);
-      validateApiResponse(saveResult);
-      if (!saveResult.success) {
-        throw new Error(`Save asset failed: ${saveResult.error}`);
+      // Save scene with new content
+      const sceneContent = JSON.stringify({ __type__: 'cc.SceneAsset', data: { __type__: 'cc.Scene' } });
+      const saveSceneResult = await testClient.execute('asset-db', 'save-asset', [scenePath, sceneContent]);
+      validateApiResponse(saveSceneResult);
+      if (!saveSceneResult.success) {
+        throw new Error(`Save scene failed: ${saveSceneResult.error}`);
       }
 
-      // ===== Query meta =====
-      const metaQueryResult = await testClient.execute('asset-db', 'query-asset-meta', [testPath]);
+      // ===== Test save-asset with .prefab file =====
+      // Create prefab
+      const createPrefabResult = await testClient.execute('asset-db', 'create-asset', [prefabPath]);
+      validateApiResponse(createPrefabResult);
+      if (!createPrefabResult.success) {
+        throw new Error(`Create prefab failed: ${createPrefabResult.error}`);
+      }
+
+      // Open prefab
+      const openPrefabResult = await testClient.execute('asset-db', 'open-asset', [prefabPath]);
+      validateApiResponse(openPrefabResult);
+      if (!openPrefabResult.success) {
+        throw new Error(`Open prefab failed: ${openPrefabResult.error}`);
+      }
+
+      // Save prefab with new content
+      const prefabContent = JSON.stringify({ _name: 'TestPrefab', type: 'cc.Prefab' });
+      const savePrefabResult = await testClient.execute('asset-db', 'save-asset', [prefabPath, prefabContent]);
+      validateApiResponse(savePrefabResult);
+      if (!savePrefabResult.success) {
+        throw new Error(`Save prefab failed: ${savePrefabResult.error}`);
+      }
+
+      // ===== Test save-asset-meta =====
+      const metaQueryResult = await testClient.execute('asset-db', 'query-asset-meta', [scenePath]);
       validateApiResponse(metaQueryResult);
       if (!metaQueryResult.success || !metaQueryResult.data) {
         throw new Error('Query meta failed');
       }
 
-      // ===== Save meta =====
+      // Save meta
       const metaContent = JSON.stringify(metaQueryResult.data);
-      const saveMetaResult = await testClient.execute('asset-db', 'save-asset-meta', [testPath, metaContent]);
+      const saveMetaResult = await testClient.execute('asset-db', 'save-asset-meta', [scenePath, metaContent]);
       validateApiResponse(saveMetaResult);
       if (!saveMetaResult.success) {
         throw new Error(`Save meta failed: ${saveMetaResult.error}`);
       }
 
       // ===== Cleanup =====
-      const deleteResult = await testClient.execute('asset-db', 'delete-asset', [testPath]);
-      validateApiResponse(deleteResult);
-      if (!deleteResult.success) {
-        throw new Error(`Delete asset failed: ${deleteResult.error}`);
+      const deleteSceneResult = await testClient.execute('asset-db', 'delete-asset', [scenePath]);
+      validateApiResponse(deleteSceneResult);
+      if (!deleteSceneResult.success) {
+        throw new Error(`Delete scene failed: ${deleteSceneResult.error}`);
+      }
+
+      const deletePrefabResult = await testClient.execute('asset-db', 'delete-asset', [prefabPath]);
+      validateApiResponse(deletePrefabResult);
+      if (!deletePrefabResult.success) {
+        throw new Error(`Delete prefab failed: ${deletePrefabResult.error}`);
       }
 
       // Verify deletion
-      const verifyDelete = await testClient.execute('asset-db', 'query-asset-info', [testPath]);
-      validateApiResponse(verifyDelete);
-      expect(verifyDelete.success).toBe(true);
-      expect(verifyDelete.data).toBeNull();
+      const verifySceneDelete = await testClient.execute('asset-db', 'query-asset-info', [scenePath]);
+      validateApiResponse(verifySceneDelete);
+      expect(verifySceneDelete.success).toBe(true);
+      expect(verifySceneDelete.data).toBeNull();
+
+      const verifyPrefabDelete = await testClient.execute('asset-db', 'query-asset-info', [prefabPath]);
+      validateApiResponse(verifyPrefabDelete);
+      expect(verifyPrefabDelete.success).toBe(true);
+      expect(verifyPrefabDelete.data).toBeNull();
     });
   });
 

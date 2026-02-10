@@ -34,11 +34,11 @@ Cocos Creator 自动化操作技能包，提供与 Cocos Creator 编辑器 HTTP 
 # 连接测试
 cocos-skills scene query-is-ready
 
-# 打开场景
-cocos-skills scene open-scene db://assets/scenes/Main.scene
-
 # 查询节点树
 cocos-skills scene query-node-tree
+
+# 打开节点对应的场景/预制体（使用节点UUID）
+cocos-skills scene open-scene <节点UUID>
 ```
 
 ### API 使用模式

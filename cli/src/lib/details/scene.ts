@@ -12,18 +12,16 @@ export const sceneDetails: ModuleActionDetails = {
     notes: '在执行场景操作前建议检查此状态，确保场景已加载完成',
   },
   'open-scene': {
-    description: '打开指定路径的资源文件（支持 .scene、.prefab 等 Cocos 资源文件）',
+    description: '打开指定节点的场景或预制体（在编辑器中打开）',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '资源文件路径，格式: db://assets/xxx.scene 或 db://assets/xxx.prefab 等 Cocos 资源文件' },
+      { name: 'uuid', type: 'string', required: true, description: '节点 UUID。可以通过 query-node-tree 查询获取节点树中任意节点的 UUID' },
     ],
     examples: [
-      'cocos-skills scene open-scene db://assets/Main.scene',
-      'cocos-skills scene open-scene "db://assets/scenes/Level 1.scene"',
-      'cocos-skills scene open-scene db://assets/scenes/Loading.scene',
-      'cocos-skills scene open-scene db://assets/Prefabs/Player.prefab',
-      'cocos-skills scene open-scene db://assets/UI/Button.prefab',
+      'cocos-skills scene open-scene 节点UUID',
+      'cocos-skills scene query-node-tree # 先获取节点树',
+      'cocos-skills scene open-scene uuid-from-node-tree # 然后打开节点的场景/预制体',
     ],
-    notes: '当前场景会被自动关闭。资源路径必须以 db://assets/ 开头。支持打开 .scene、.prefab 等各种 Cocos Creator 资源文件',
+    notes: '在编辑器中打开指定节点对应的场景或预制体。对于场景节点，会打开对应的场景文件；对于预制体节点，会打开预制体编辑器。使用 query-node-tree 命令可以查看当前场景的节点树结构并获取节点 UUID',
   },
   'save-scene': {
     description: '保存当前场景',
@@ -201,7 +199,7 @@ export const sceneDetails: ModuleActionDetails = {
 
 示例错误提示：
 "无法将节点 xxx 移动到 yyy 下：节点 xxx 是节点 yyy 的祖先节点，这会形成循环引用"
-
+谨慎操作，避免破坏引用关系
 重要：修改场景后需要调用 save-scene 保存到磁盘`,
   },
   'create-node': {

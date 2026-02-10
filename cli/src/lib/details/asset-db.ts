@@ -82,20 +82,25 @@ export const assetDbDetails: ModuleActionDetails = {
     examples: [
       'cocos-skills asset-db open-asset db://assets/scenes/Main.scene',
       'cocos-skills asset-db open-asset db://assets/prefabs/Player.prefab',
+      'cocos-skills asset-db open-asset db://assets/animations/Idle.anim',
+      'cocos-skills asset-db open-asset db://assets/materials/Default.mtl',
     ],
-    notes: '根据资源类型，会在相应的编辑器中打开（场景编辑器、预制体编辑器等）',
+    notes: '根据资源类型，会在相应的编辑器中打开（场景编辑器、预制体编辑器等）。支持的文件类型：\n- 场景/预制体: .scene, .prefab\n- 动画: .anim, .animask\n- 材质: .material, .mtl, .pmtl\n- 图集: .pac, .labelatlas\n- 纹理: .png, .jpg, .jpeg, .webp, .bmp\n- 音频: .mp3, .ogg, .wav, .m4a\n- 字体: .ttf, .otf, .woff, .woff2\n- 其他: .fire, .asset, .effect, .mesh, .spline, .fnt, .spriteframe, .physics',
   },
   'save-asset': {
     description: '保存资源内容到磁盘',
     parameters: [
       { name: 'path', type: 'string', required: true, description: '资源路径' },
-      { name: 'content', type: 'string | Buffer', required: true, description: '资源内容（JSON 字符串或二进制数据）' },
+      { name: 'content', type: 'string | Buffer', required: false, description: '资源内容（JSON 字符串或二进制数据）。如果未提供，将根据文件扩展名自动生成默认数据' },
     ],
     examples: [
       'cocos-skills asset-db save-asset db://assets/data/config.json \'{"key": "new value"}\'',
       'cocos-skills asset-db save-asset db://assets/scenes/Main.scene \'{"__type__": "cc.SceneAsset", "data": {...}}\'',
+      'cocos-skills asset-db save-asset db://assets/scenes/New.scene',
+      'cocos-skills asset-db save-asset db://assets/prefabs/New.prefab',
+      'cocos-skills asset-db save-asset db://assets/materials/New.mtl',
     ],
-    notes: '保存资源内容到磁盘。第二个参数可以是 JSON 字符串（用于 .json、.scene、.prefab 等文本资源）或 Buffer（用于二进制资源）',
+    notes: '保存资源内容到磁盘。第二个参数可以是 JSON 字符串（用于 .scene、.prefab 等文本资源）或 Buffer（用于二进制资源）。如果未提供 content 参数，系统会根据文件扩展名自动生成默认的 JSON 数据。支持的文件类型：.scene、.prefab、.material、.mtl、.pmtl、.anim、.animask、.pac、.labelatlas、.fire、.asset、.effect、.mesh、.spline、.fnt、.spriteframe、.physics',
   },
   'save-asset-meta': {
     description: '保存资源的 meta 文件',

@@ -19,17 +19,22 @@
 
 ## open-scene
 
-打开指定场景文件。
+打开指定节点对应的场景或预制体。
 
 ```python
-execute("scene", "open-scene", ["db://assets/scenes/Main.scene"])
+# 先获取节点树
+tree_result = execute("scene", "query-node-tree")
+node_uuid = tree_result["data"]["uuid"]
+
+# 然后打开节点对应的场景/预制体
+execute("scene", "open-scene", [node_uuid])
 ```
 
 ### 参数
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| uuid | string | 场景文件路径，格式：db://assets/xxx.scene |
+| uuid | string | 节点 UUID，通过 `query-node-tree` 获取 |
 
 ### 返回值
 
