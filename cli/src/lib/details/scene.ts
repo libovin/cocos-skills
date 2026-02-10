@@ -12,16 +12,15 @@ export const sceneDetails: ModuleActionDetails = {
     notes: '在执行场景操作前建议检查此状态，确保场景已加载完成',
   },
   'open-scene': {
-    description: '打开指定节点的场景或预制体（在编辑器中打开）',
+    description: '打开场景或预制体（支持 UUID 或路径）',
     parameters: [
-      { name: 'uuid', type: 'string', required: true, description: '节点 UUID。可以通过 query-node-tree 查询获取节点树中任意节点的 UUID' },
+      { name: 'uuidOrPath', type: 'string', required: true, description: 'UUID 或路径（db://...）' },
     ],
     examples: [
-      'cocos-skills scene open-scene 节点UUID',
-      'cocos-skills scene query-node-tree # 先获取节点树',
-      'cocos-skills scene open-scene uuid-from-node-tree # 然后打开节点的场景/预制体',
+      'cocos-skills scene open-scene db://assets/scenes/Main.scene',
+      'cocos-skills scene open-scene <uuid>',
     ],
-    notes: '在编辑器中打开指定节点对应的场景或预制体。对于场景节点，会打开对应的场景文件；对于预制体节点，会打开预制体编辑器。使用 query-node-tree 命令可以查看当前场景的节点树结构并获取节点 UUID',
+    notes: '自动识别参数格式。与 asset-db open-asset 功能相同，可互换使用\n\nUUID/路径转换：\n- UUID → 路径：asset-db query-url <uuid>\n- 路径 → UUID：asset-db query-uuid <path>',
   },
   'save-scene': {
     description: '保存当前场景',

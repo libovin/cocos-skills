@@ -31,18 +31,11 @@ const PRESETS: Record<string, QueryNodeTreeOptions> = {
   },
   /** Basic: uuid, name, path, active */
   basic: {
-    only: ['uuid', 'name', 'path', 'active'],
-    withComponents: false,
-    maxDepth: null,
-  },
-  /** Shallow: first level only, all fields */
-  shallow: {
-    maxDepth: 1,
+    only: ['uuid', 'name', 'path', 'active', 'isScene'],
     withComponents: false,
   },
   /** Full: everything (default behavior) */
   full: {
-    maxDepth: null,
     withComponents: true,
     onlyActive: false,
   },
@@ -52,8 +45,6 @@ const PRESETS: Record<string, QueryNodeTreeOptions> = {
  * Query options for filtering the node tree
  */
 interface QueryNodeTreeOptions {
-  /** Maximum depth (null = unlimited, 0 = root only, 1 = root + children, etc.) */
-  maxDepth?: number | null;
   /** Fields to include (null = all, can be array or comma-separated string) */
   only?: string[] | string | null;
   /** Include component information */
@@ -94,10 +85,6 @@ function parseOptions(params: unknown): QueryNodeTreeOptions {
     const obj = params as Record<string, unknown>;
     const options: QueryNodeTreeOptions = {};
 
-    // Support both old and new parameter names
-    if ('maxDepth' in obj) options.maxDepth = obj.maxDepth as number | null;
-    else if ('depth' in obj) options.maxDepth = obj.depth as number | null;
-
     if ('only' in obj) options.only = obj.only as string[] | string | null;
     else if ('fields' in obj) options.only = obj.fields as string[] | null;
 
@@ -131,11 +118,9 @@ function filterNodeFields(node: SceneNode, fields: string[]): SceneNode {
  */
 function filterTreeNodes(
   nodes: SceneNode[],
-  options: QueryNodeTreeOptions,
-  currentDepth: number = 0
+  options: QueryNodeTreeOptions
 ): SceneNode[] {
   const onlyFields = normalizeOnlyFields(options.only);
-  const maxDepth = options.maxDepth === null || options.maxDepth === undefined ? Infinity : options.maxDepth;
   const onlyActive = options.onlyActive === true;
   const withComponents = options.withComponents === true;
 
@@ -153,16 +138,18 @@ function filterTreeNodes(
       if (onlyFields && onlyFields.length > 0) {
         filteredNode = filterNodeFields(node, onlyFields);
       } else {
-        // Clone node to avoid mutating original
-        const { uuid, name, ...rest } = node;
+        // Clone node to avoid mutating original (excluding children which will be added below if needed)
+        const { uuid, name, children, ...rest } = node;
         filteredNode = { uuid, name, ...rest };
       }
 
       // Handle children recursively
-      if (node.children && node.children.length > 0 && currentDepth < maxDepth) {
-        filteredNode.children = filterTreeNodes(node.children, options, currentDepth + 1);
-      } else {
-        filteredNode.children = [];
+      if (node.children && node.children.length > 0) {
+        const childNodes = filterTreeNodes(node.children, options);
+        // Only set children if non-empty
+        if (childNodes.length > 0) {
+          filteredNode.children = childNodes;
+        }
       }
 
       // Remove components if not requested
@@ -179,7 +166,6 @@ function filterTreeNodes(
  */
 function hasValidOptions(options: QueryNodeTreeOptions): boolean {
   return (
-    options.maxDepth !== undefined ||
     options.only !== undefined ||
     options.withComponents !== undefined ||
     options.onlyActive !== undefined
@@ -216,28 +202,6 @@ export const sceneQueryNodeTreePostprocessor: PostprocessorFn = async (
   // We need to handle the root node's children array
   const rootNode = result.data as SceneNode;
 
-  if (!rootNode.children || rootNode.children.length === 0) {
-    // No children, return filtered root node
-    const onlyFields = normalizeOnlyFields(options.only);
-    if (onlyFields && onlyFields.length > 0) {
-      const filteredRoot = filterNodeFields(rootNode, onlyFields);
-      filteredRoot.children = [];
-      // Remove components if not requested
-      if (options.withComponents !== true && '__comps__' in filteredRoot) {
-        delete (filteredRoot as Record<string, unknown>).__comps__;
-      }
-      return {
-        ...result,
-        data: filteredRoot,
-      };
-    }
-    return result;
-  }
-
-  // Filter the children array
-  const filteredChildren = filterTreeNodes(rootNode.children, options);
-
-  // Return filtered root node with filtered children
   const onlyFields = normalizeOnlyFields(options.only);
   let filteredRoot: SceneNode;
 
@@ -245,11 +209,18 @@ export const sceneQueryNodeTreePostprocessor: PostprocessorFn = async (
     filteredRoot = filterNodeFields(rootNode, onlyFields);
   } else {
     // Clone root node
-    const { uuid, name, ...rest } = rootNode;
+    const { uuid, name, children, ...rest } = rootNode;
     filteredRoot = { uuid, name, ...rest };
   }
 
-  filteredRoot.children = filteredChildren;
+  // Filter children if they exist
+  if (rootNode.children && rootNode.children.length > 0) {
+    const filteredChildren = filterTreeNodes(rootNode.children, options);
+    // Only set children if non-empty
+    if (filteredChildren.length > 0) {
+      filteredRoot.children = filteredChildren;
+    }
+  }
 
   // Remove components if not requested
   if (options.withComponents !== true && '__comps__' in filteredRoot) {

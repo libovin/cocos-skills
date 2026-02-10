@@ -112,23 +112,23 @@ const NODE_TYPE_CONFIGS: Record<string, NodeTypeConfig> = {
     children: [{ type: 'ScrollViewContentItem', name: 'item' }],
   },
   'ScrollViewContentItem': {
-    components: ['cc.UITransform', 'cc.Label'],
+    components: ['cc.Label'],
   },
   'cc.Slider': {
-    components: ['cc.UITransform', 'cc.Sprite', 'cc.Slider'],
+    components: ['cc.Sprite', 'cc.Slider'],
     children: [{ type: 'ScrollHandle', name: 'Handle' }],
   },
   'ScrollHandle': {
-    components: ['cc.UITransform', 'cc.Sprite', 'cc.Button'],
+    components: ['cc.Sprite', 'cc.Button'],
   },
 
 
   'cc.Toggle': {
-    components: ['cc.UITransform', 'cc.Sprite', 'cc.Toggle'],
+    components: ['cc.Sprite', 'cc.Toggle'],
     children: [{ type: 'ToggleCheckmark', name: 'Checkmark' }],
   },
   'ToggleCheckmark': {
-    components: ['cc.UITransform', 'cc.Sprite'],
+    components: ['cc.Sprite'],
   },
 
   'cc.ToggleGroupContainer': {
@@ -136,13 +136,13 @@ const NODE_TYPE_CONFIGS: Record<string, NodeTypeConfig> = {
     children: [{ type: 'cc.Toggle', name: 'Toggle1' }, { type: 'cc.Toggle', name: 'Toggle2' }, { type: 'cc.Toggle', name: 'Toggle3' }],
   },
   'cc.VideoPlayer': {
-    components: ['cc.UITransform', 'cc.VideoPlayer'],
+    components: ['cc.VideoPlayer'],
   },
   'cc.WebView': {
-    components: ['cc.UITransform', 'cc.WebView'],
+    components: ['cc.WebView'],
   },
   'cc.Widget': {
-    components: ['cc.UITransform', 'cc.Widget'],
+    components: ['cc.Widget'],
   },
 
   'cc.MeshRenderer': {

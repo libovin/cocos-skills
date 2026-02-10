@@ -75,17 +75,15 @@ export const assetDbDetails: ModuleActionDetails = {
     notes: '此操作不可撤销。建议先使用 query-asset-users 检查是否有其他文件引用该资源',
   },
   'open-asset': {
-    description: '在编辑器中打开资源进行编辑',
+    description: '在编辑器中打开资源（支持 UUID 或路径）',
     parameters: [
-      { name: 'path', type: 'string', required: true, description: '资源路径' },
+      { name: 'uuidOrPath', type: 'string', required: true, description: 'UUID 或路径（db://...）' },
     ],
     examples: [
       'cocos-skills asset-db open-asset db://assets/scenes/Main.scene',
-      'cocos-skills asset-db open-asset db://assets/prefabs/Player.prefab',
-      'cocos-skills asset-db open-asset db://assets/animations/Idle.anim',
-      'cocos-skills asset-db open-asset db://assets/materials/Default.mtl',
+      'cocos-skills asset-db open-asset <uuid>',
     ],
-    notes: '根据资源类型，会在相应的编辑器中打开（场景编辑器、预制体编辑器等）。支持的文件类型：\n- 场景/预制体: .scene, .prefab\n- 动画: .anim, .animask\n- 材质: .material, .mtl, .pmtl\n- 图集: .pac, .labelatlas\n- 纹理: .png, .jpg, .jpeg, .webp, .bmp\n- 音频: .mp3, .ogg, .wav, .m4a\n- 字体: .ttf, .otf, .woff, .woff2\n- 其他: .fire, .asset, .effect, .mesh, .spline, .fnt, .spriteframe, .physics',
+    notes: '自动识别参数格式。与 scene open-scene 功能相同，可互换使用\n\nUUID/路径转换：\n- UUID → 路径：asset-db query-url <uuid>\n- 路径 → UUID：asset-db query-uuid <path>',
   },
   'save-asset': {
     description: '保存资源内容到磁盘',

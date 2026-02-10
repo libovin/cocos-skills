@@ -39,15 +39,15 @@ export function validateOpenScene(params: unknown[]): void {
     throw new ValidationError('scene', 'open-scene', 'uuid', '必须是字符串类型');
   }
 
-  if (!isValidUUID(uuid)) {
-    throw new ValidationError(
-      'scene',
-      'open-scene',
-      'uuid',
-      '必须是有效的 UUID 格式。支持两种格式：\n' +
-      '1. 标准 UUID: 8-4-4-4-12 格式（如：9f9d4dcb-2795-4781-aaea-c3d31ce699a1）\n' +
-      '2. 短 ID: 约20-22个字符（如：c0y6F5f+pAvI805TdmxIjx）\n' +
-      '可以通过 query-node-tree 命令获取节点 UUID'
-    );
-  }
+  // if (!isValidUUID(uuid)) {
+  //   throw new ValidationError(
+  //     'scene',
+  //     'open-scene',
+  //     'uuid',
+  //     '必须是有效的 UUID 格式。支持两种格式：\n' +
+  //     '1. 标准 UUID: 8-4-4-4-12 格式（如：9f9d4dcb-2795-4781-aaea-c3d31ce699a1）\n' +
+  //     '2. 短 ID: 约20-22个字符（如：c0y6F5f+pAvI805TdmxIjx）\n' +
+  //     '可以通过 query-node-tree 命令获取节点 UUID'
+  //   );
+  // }
 }
