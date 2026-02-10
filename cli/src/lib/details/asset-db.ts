@@ -14,10 +14,9 @@ export const assetDbDetails: ModuleActionDetails = {
     notes: '返回布尔值，表示资源数据库是否可以接受请求。在执行资源操作前建议先检查此状态',
   },
   'create-asset': {
-    description: '创建新资源文件',
+    description: '创建新资源文件（自动生成默认数据）',
     parameters: [
       { name: 'path', type: 'string', required: true, description: '资源文件路径，如 db://assets/prefabs/Test.prefab' },
-      { name: 'data', type: 'string', required: false, description: '资源数据的 JSON 字符串（可选，如未提供将根据文件扩展名自动生成默认值）' },
     ],
     examples: [
       'cocos-skills asset-db create-asset db://assets/prefabs/Test.prefab',
@@ -26,7 +25,7 @@ export const assetDbDetails: ModuleActionDetails = {
       'cocos-skills asset-db create-asset db://assets/physics/Test.pmtl',
       'cocos-skills asset-db create-asset db://assets/animations/Test.anim',
     ],
-    notes: 'path 参数是必需的，data 参数是可选的。如果未提供 data 参数，系统会根据文件扩展名自动生成默认的 JSON 数据。支持的文件类型：\n- Prefab (.prefab) 和 Scene (.scene)：自动生成数组格式\n- Material (.material, .mtl)、PhysicsMaterial (.pmtl)、AnimationClip (.anim)、AnimationMask (.animask)、SpriteAtlas (.pac)、LabelAtlas (.labelatlas)：自动生成对象格式\n- 其他未知后缀名：生成通用 cc.Asset 对象\n创建的资源初始状态为 invalid，需要填充正确的数据后重新导入',
+    notes: '系统会根据文件扩展名自动生成默认的 JSON 数据。支持的文件类型：.prefab、.scene、.material、.mtl、.pmtl、.anim、.animask、.pac、.labelatlas',
   },
   'import-asset': {
     description: '导入外部资源到项目',

@@ -43,6 +43,33 @@ function generateFileId(): string {
 }
 
 /**
+ * 支持的资源类型扩展名列表
+ */
+export const SUPPORTED_ASSET_EXTENSIONS = [
+  '.prefab',
+  '.scene',
+  '.material',
+  '.mtl',
+  '.pmtl',
+  '.anim',
+  '.animask',
+  '.pac',
+  '.labelatlas',
+] as const;
+
+/**
+ * 支持的资源类型扩展名联合类型
+ */
+export type SupportedAssetExtension = typeof SUPPORTED_ASSET_EXTENSIONS[number];
+
+/**
+ * 检查扩展名是否支持
+ */
+export function isSupportedExtension(ext: string): ext is SupportedAssetExtension {
+  return SUPPORTED_ASSET_EXTENSIONS.includes(ext as SupportedAssetExtension);
+}
+
+/**
  * Generate default JSON data for create-asset command based on file extension
  */
 export function generateDefaultAssetData(path: string): string {

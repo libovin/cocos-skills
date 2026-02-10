@@ -31,7 +31,7 @@ const PRESETS: Record<string, QueryNodeTreeOptions> = {
   },
   /** Basic: uuid, name, path, active */
   basic: {
-    only: ['uuid', 'name', 'path', 'active', 'isScene'],
+    only: ['uuid', 'name', 'path', 'active'],
     withComponents: false,
   },
   /** Full: everything (default behavior) */
