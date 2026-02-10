@@ -117,6 +117,12 @@ export class CocosClient {
     const pipelineResult = await processRequest(module, action, params, this);
     const processedParams = pipelineResult.params;
 
+    // Check if preprocessor wants to skip the API call
+    if (pipelineResult.skipApiCall) {
+      // Return the predefined success response
+      return pipelineResult.skipResponse || { success: true };
+    }
+
     // Make API call
     const result = await this._request('POST', `/api/${module}/${action}`, {
       params: processedParams,

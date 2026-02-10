@@ -38,6 +38,17 @@ export async function processRequest(
   const preprocessor = getPreprocessor(module, action);
   if (preprocessor) {
     const preprocessorResult = await preprocessor(processedParams, client);
+
+    // Check if preprocessor returned a PipelineResult (for skipApiCall feature)
+    if (
+      typeof preprocessorResult === 'object' &&
+      preprocessorResult !== null &&
+      'params' in preprocessorResult
+    ) {
+      // It's a PipelineResult, return it directly
+      return preprocessorResult as PipelineResult;
+    }
+
     processedParams = Array.isArray(preprocessorResult) ? preprocessorResult : [preprocessorResult];
   }
 

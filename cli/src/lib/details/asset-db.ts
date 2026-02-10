@@ -74,7 +74,7 @@ export const assetDbDetails: ModuleActionDetails = {
     notes: '此操作不可撤销。建议先使用 query-asset-users 检查是否有其他文件引用该资源',
   },
   'open-asset': {
-    description: '在编辑器中打开资源（支持 UUID 或路径）',
+    description: '在编辑器中打开资源（支持 UUID 或路径，自动保存当前场景）',
     parameters: [
       { name: 'uuidOrPath', type: 'string', required: true, description: 'UUID 或路径（db://...）' },
     ],
@@ -82,22 +82,37 @@ export const assetDbDetails: ModuleActionDetails = {
       'cocos-skills asset-db open-asset db://assets/scenes/Main.scene',
       'cocos-skills asset-db open-asset <uuid>',
     ],
-    notes: '自动识别参数格式。与 scene open-scene 功能相同，可互换使用\n\nUUID/路径转换：\n- UUID → 路径：asset-db query-url <uuid>\n- 路径 → UUID：asset-db query-uuid <path>',
+    notes: `自动识别参数格式。与 scene open-scene 功能相同，可互换使用。
+
+自动保存功能：
+- 打开资源前会自动检查当前场景是否有未保存的更改
+- 如果有未保存的更改，会自动调用 save-scene 保存当前场景
+- 然后再打开资源
+
+UUID/路径转换：
+- UUID → 路径：asset-db query-url <uuid>
+- 路径 → UUID：asset-db query-uuid <path>`,
   },
   'save-asset': {
-    description: '保存资源内容到磁盘',
+    description: '保存资源（跳过 API 调用，自动保存当前场景）',
     parameters: [
       { name: 'path', type: 'string', required: true, description: '资源路径' },
-      { name: 'content', type: 'string | Buffer', required: false, description: '资源内容（JSON 字符串或二进制数据）。如果未提供，将根据文件扩展名自动生成默认数据' },
     ],
     examples: [
-      'cocos-skills asset-db save-asset db://assets/data/config.json \'{"key": "new value"}\'',
-      'cocos-skills asset-db save-asset db://assets/scenes/Main.scene \'{"__type__": "cc.SceneAsset", "data": {...}}\'',
+      'cocos-skills asset-db save-asset db://assets/data/config.json',
       'cocos-skills asset-db save-asset db://assets/scenes/New.scene',
-      'cocos-skills asset-db save-asset db://assets/prefabs/New.prefab',
-      'cocos-skills asset-db save-asset db://assets/materials/New.mtl',
     ],
-    notes: '保存资源内容到磁盘。第二个参数可以是 JSON 字符串（用于 .scene、.prefab 等文本资源）或 Buffer（用于二进制资源）。如果未提供 content 参数，系统会根据文件扩展名自动生成默认的 JSON 数据。支持的文件类型：.scene、.prefab、.material、.mtl、.pmtl、.anim、.animask、.pac、.labelatlas、.fire、.asset、.effect、.mesh、.spline、.fnt、.spriteframe、.physics',
+    notes: `此命令已简化为直接返回成功，不会调用保存资源的 API 接口。
+
+自动保存功能：
+- 返回成功前会自动检查当前场景是否有未保存的更改
+- 如果有未保存的更改，会自动调用 save-scene 保存当前场景
+- 然后直接返回成功响应
+
+重要说明：
+- 此命令不再实际保存资源文件到磁盘
+- 仅用于兼容性，直接返回成功响应
+- 如需保存场景内容，请使用 scene save-scene 命令`,
   },
   'save-asset-meta': {
     description: '保存资源的 meta 文件',

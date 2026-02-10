@@ -12,7 +12,7 @@ export const sceneDetails: ModuleActionDetails = {
     notes: '在执行场景操作前建议检查此状态，确保场景已加载完成',
   },
   'open-scene': {
-    description: '打开场景或预制体（支持 UUID 或路径）',
+    description: '打开场景或预制体（支持 UUID 或路径，自动保存当前场景）',
     parameters: [
       { name: 'uuidOrPath', type: 'string', required: true, description: 'UUID 或路径（db://...）' },
     ],
@@ -20,7 +20,16 @@ export const sceneDetails: ModuleActionDetails = {
       'cocos-skills scene open-scene db://assets/scenes/Main.scene',
       'cocos-skills scene open-scene <uuid>',
     ],
-    notes: '自动识别参数格式。与 asset-db open-asset 功能相同，可互换使用\n\nUUID/路径转换：\n- UUID → 路径：asset-db query-url <uuid>\n- 路径 → UUID：asset-db query-uuid <path>',
+    notes: `自动识别参数格式。与 asset-db open-asset 功能相同，可互换使用。
+
+自动保存功能：
+- 打开新场景前会自动检查当前场景是否有未保存的更改
+- 如果有未保存的更改，会自动调用 save-scene 保存当前场景
+- 然后再打开新场景
+
+UUID/路径转换：
+- UUID → 路径：asset-db query-url <uuid>
+- 路径 → UUID：asset-db query-uuid <path>`,
   },
   'save-scene': {
     description: '保存当前场景',
@@ -29,18 +38,32 @@ export const sceneDetails: ModuleActionDetails = {
     notes: '保存当前打开的场景的所有更改。建议在重要操作后调用',
   },
   'save-as-scene': {
-    description: '将场景另存为新文件, 会弹出文件保存框',
+    description: '将当前场景另存为新文件（打开系统保存对话框）',
     parameters: [],
     examples: [
       'cocos-skills scene save-as-scene',
     ],
-    notes: '创建场景副本，新场景将成为当前打开的场景',
+    notes: `将当前场景另存为新的场景文件，系统会弹出文件保存对话框供用户选择保存位置和文件名。
+
+新场景将成为当前打开的场景，原场景保持不变。此操作创建场景的完整副本，包含所有节点和组件。
+
+适用场景：
+- 需要基于当前场景创建变体版本
+- 备份场景当前状态
+- 创建场景模板用于后续开发`,
   },
   'close-scene': {
-    description: '关闭当前场景',
+    description: '关闭当前场景（自动保存未保存的更改）',
     parameters: [],
     examples: ['cocos-skills scene close-scene'],
-    notes: '关闭当前场景，如果有未保存的更改会提示保存',
+    notes: `关闭当前场景。系统会自动打开到默认场景。
+
+自动保存功能：
+- 关闭前会自动检查是否有未保存的更改
+- 如果有未保存的更改，会自动调用 save-scene 保存
+- 然后再关闭场景
+
+注意：原场景文件保持不变，未保存的更改会保存到原文件中`,
   },
   'set-property': {
     description: '设置节点或组件属性值',

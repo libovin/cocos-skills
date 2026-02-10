@@ -47,11 +47,36 @@ function isPathLike(input: string): boolean {
 /**
  * 将 UUID 转换为路径
  * 自动支持 UUID 或路径两种参数格式
+ * 打开资源前自动保存当前场景的未保存更改
  */
 export const assetDbOpenAssetPreprocessor: PreprocessorFn = async (
   params: unknown[],
   client: CocosClient
 ): Promise<unknown[]> => {
+  // 0. 在打开资源前，检查并保存当前场景的未保存更改
+  try {
+    const dirtyResponse = await (client as any)._request('POST', '/api/scene/query-dirty', {
+      params: [],
+    }) as ApiResponse<{ result?: boolean }>;
+
+    if (dirtyResponse.success && dirtyResponse.data?.result === true) {
+      console.log('检测到当前场景有未保存的更改，正在自动保存...');
+
+      const saveResponse = await (client as any)._request('POST', '/api/scene/save-scene', {
+        params: [],
+      }) as ApiResponse;
+
+      if (saveResponse.success) {
+        console.log('当前场景已自动保存');
+      } else {
+        console.warn('自动保存当前场景失败，但将继续打开资源');
+      }
+    }
+  } catch (error) {
+    // 如果检查或保存失败，记录警告但继续打开资源
+    console.warn('检查当前场景状态时出错，将继续打开资源:', error instanceof Error ? error.message : error);
+  }
+
   if (params.length < 1) {
     return params;
   }
