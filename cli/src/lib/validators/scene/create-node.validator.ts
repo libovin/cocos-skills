@@ -15,7 +15,7 @@ export function validateCreateNode(params: unknown[]): void {
     throw new ValidationError('scene', 'create-node', 'params', '参数必须是对象类型');
   }
 
-  const { parent, name, type } = options as Record<string, unknown>;
+  const { parent, name, type, components } = options as Record<string, unknown>;
 
   if (parent !== undefined && typeof parent !== 'string') {
     throw new ValidationError('scene', 'create-node', 'parent', '必须是字符串类型');
@@ -27,5 +27,16 @@ export function validateCreateNode(params: unknown[]): void {
 
   if (type !== undefined && typeof type !== 'string') {
     throw new ValidationError('scene', 'create-node', 'type', '必须是字符串类型');
+  }
+
+  if (components !== undefined) {
+    if (!Array.isArray(components)) {
+      throw new ValidationError('scene', 'create-node', 'components', '必须是数组类型');
+    }
+    for (const comp of components) {
+      if (typeof comp !== 'string') {
+        throw new ValidationError('scene', 'create-node', 'components', '数组元素必须是字符串类型');
+      }
+    }
   }
 }

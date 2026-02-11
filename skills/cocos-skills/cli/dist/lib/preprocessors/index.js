@@ -12,6 +12,8 @@ import { sceneSetParentPreprocessor } from './scene/set-parent.preprocessor.js';
 import { sceneQueryNodeTreePreprocessor } from './scene/query-node-tree.preprocessor.js';
 import { sceneOpenScenePreprocessor } from './scene/open-scene.preprocessor.js';
 import { sceneCloseScenePreprocessor } from './scene/close-scene.preprocessor.js';
+import { sceneCreateComponentPreprocessor } from './scene/create-component.preprocessor.js';
+import { sceneSetPropertyPreprocessor } from './scene/set-property.preprocessor.js';
 /**
  * Register all built-in preprocessors
  */
@@ -25,5 +27,7 @@ export function registerBuiltinPreprocessors() {
     registerPreprocessor('scene', 'query-node-tree', sceneQueryNodeTreePreprocessor);
     registerPreprocessor('scene', 'open-scene', sceneOpenScenePreprocessor);
     registerPreprocessor('scene', 'close-scene', sceneCloseScenePreprocessor);
+    registerPreprocessor('scene', 'create-component', sceneCreateComponentPreprocessor);
+    registerPreprocessor('scene', 'set-property', sceneSetPropertyPreprocessor);
 }
 //# sourceMappingURL=index.js.map

@@ -38,6 +38,8 @@ export interface PipelineResult {
     skipApiCall?: boolean;
     /** 当 skipApiCall 为 true 时，返回的响应数据 */
     skipResponse?: ApiResponse;
+    /** 是否跳过调用后置处理器（当 skipApiCall 为 true 时生效，默认 false） */
+    skipPostProcessor?: boolean;
 }
 /**
  * 管道配置

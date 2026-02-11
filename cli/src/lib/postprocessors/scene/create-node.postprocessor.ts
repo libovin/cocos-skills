@@ -27,17 +27,27 @@ export const sceneCreateNodePostprocessor: PostprocessorFn = async (
     return result;
   }
 
-  // Get type from original params (not processed params)
+  // Get options from original params (not processed params)
   const options = params[0] as Record<string, unknown> | undefined;
   const type = options?.type;
-
-  if (!type || typeof type !== 'string') {
-    return result;
-  }
+  const customComponents = options?.components;
 
   // Get components and children for the node type
-  const componentsToAdd = getComponentsForNodeType(type);
-  const childrenToCreate = getChildNodesForNodeType(type);
+  const typeComponents = type && typeof type === 'string' ? getComponentsForNodeType(type) : [];
+  const childrenToCreate = type && typeof type === 'string' ? getChildNodesForNodeType(type) : [];
+
+  // Get custom components from params
+  const customComponentsList: string[] = [];
+  if (customComponents && Array.isArray(customComponents)) {
+    for (const comp of customComponents) {
+      if (typeof comp === 'string') {
+        customComponentsList.push(comp);
+      }
+    }
+  }
+
+  // Combine type components and custom components (remove duplicates)
+  const componentsToAdd = [...new Set([...typeComponents, ...customComponentsList])];
 
   if (componentsToAdd.length === 0 && childrenToCreate.length === 0) {
     return result;
