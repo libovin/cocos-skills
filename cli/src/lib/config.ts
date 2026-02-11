@@ -1,16 +1,10 @@
-/**
- * Configuration management for Cocos Creator HTTP client
- * Reads from ~/.cocos-http/cocos-http.json
- * Ported from scripts/client.py:183-231
- */
-
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import type { CocosHttpConfig, ProjectConfig } from '../types.js';
 
-const CONFIG_DIR = join(homedir(), '.cocos-http');
-const CONFIG_PATH = join(CONFIG_DIR, 'cocos-http.json');
+const CONFIG_DIR = join(homedir(), '.cocos-skills-ext');
+const CONFIG_PATH = join(CONFIG_DIR, 'cocos-skills-ext.json');
 
 /**
  * Load server URL from configuration file
