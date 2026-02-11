@@ -1,1 +1,1 @@
-{"version":3,"file":"set-property.postprocessor.d.ts","sourceRoot":"","sources":["../../../../src/lib/postprocessors/scene/set-property.postprocessor.ts"],"names":[],"mappings":"AAAA;;;GAGG;AAEH,OAAO,KAAK,EAAE,eAAe,EAAE,MAAM,yBAAyB,CAAC;AAgB/D;;GAEG;AACH,eAAO,MAAM,6BAA6B,EAAE,eAwD3C,CAAC"}
+{"version":3,"file":"set-property.postprocessor.d.ts","sourceRoot":"","sources":["../../../../src/lib/postprocessors/scene/set-property.postprocessor.ts"],"names":[],"mappings":"AAAA;;;GAGG;AAEH,OAAO,KAAK,EAAE,eAAe,EAAE,MAAM,yBAAyB,CAAC;AAgB/D;;GAEG;AACH,eAAO,MAAM,6BAA6B,EAAE,eAsD3C,CAAC"}

@@ -11,7 +11,6 @@ export const sceneSetPropertyPostprocessor = async (result, originalParams, clie
     const calls = resultData?.calls;
     // If no prepared calls, return original result
     if (!calls || !Array.isArray(calls) || calls.length === 0) {
-        console.log('No prepared set-property calls found');
         return result;
     }
     // Execute all prepared set-property calls
@@ -19,7 +18,6 @@ export const sceneSetPropertyPostprocessor = async (result, originalParams, clie
     for (const call of calls) {
         try {
             const setResult = await client.execute('scene', 'set-property', [call], false);
-            console.log('set-property result:', setResult);
             results.push({
                 path: call.path,
                 success: setResult.data,

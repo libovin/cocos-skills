@@ -23,34 +23,27 @@
 
 ```bash
 cocos-skills scene query-node-tree
-cocos-skills scene query-node-tree minimal
-cocos-skills scene query-node-tree basic
-cocos-skills scene query-node-tree '{"only":"uuid,name,path"}'
-cocos-skills scene query-node-tree '{"onlyActive":true}'
 ```
 
 ### 参数
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| filter | string/object | 否 | 过滤选项 |
+无需参数。
 
-### 预设配置
+### 返回结构
 
-| 预设 | 说明 |
-|------|------|
-| minimal | 仅 uuid 和 name |
-| basic | uuid、name、path、active |
-| full | 完整信息（默认） |
-
-### 选项参数
-
-```json
-{
-  "only": "uuid,name,path",     // 字符串或数组，指定包含的字段
-  "onlyActive": true            // 是否仅包含激活的节点
-}
-```
+每个节点包含以下属性：
+- `uuid` - 节点 UUID
+- `name` - 节点名称
+- `active` - 是否激活
+- `locked` - 是否锁定
+- `type` - 节点类型（如 cc.Node、cc.Scene）
+- `path` - 节点路径（如 "Canvas/Game2048"）
+- `components` - 组件列表
+  - `type` - 组件类型（如 cc.Sprite、cc.Label）
+  - `value` - 组件 UUID
+  - `isCustom` - 是否为自定义脚本组件
+  - `extends` - 组件继承链
+- `children` - 子节点列表（递归结构）
 
 ### 响应
 
@@ -58,17 +51,29 @@ cocos-skills scene query-node-tree '{"onlyActive":true}'
 {
   "success": true,
   "data": {
-    "uuid": "根节点UUID",
-    "name": "Canvas",
-    "path": "/Canvas",
+    "name": "Game2048",
+    "uuid": "e973a2e6-457b-44cc-b1fd-72337f66464a",
     "active": true,
+    "locked": false,
+    "type": "cc.Scene",
+    "path": "/",
     "children": [
       {
-        "uuid": "子节点UUID",
-        "name": "Sprite",
-        "path": "/Canvas/Sprite",
+        "name": "Canvas",
+        "uuid": "ce0ld0hTlLOI05QXW1E4qx",
         "active": true,
-        "components": [...]
+        "locked": false,
+        "type": "cc.Node",
+        "path": "Canvas",
+        "components": [
+          {
+            "isCustom": false,
+            "type": "cc.UITransform",
+            "value": "32hyvcc+hN37zlnbDqVERN",
+            "extends": ["cc.Component", "cc.Object"]
+          }
+        ],
+        "children": [...]
       }
     ]
   }
@@ -80,30 +85,47 @@ cocos-skills scene query-node-tree '{"onlyActive":true}'
 创建新节点并返回节点 UUID。
 
 ```bash
-cocos-skills scene create-node '{"parent": "父节点UUID", "name": "ChildNode","type": "cc.Sprite"}'
+cocos-skills scene create-node '{"parent": "父节点UUID", "name": "ChildNode", "type": "cc.Sprite"}'
 ```
 
 ### 参数（JSON 对象）
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| parent | string | 否 | 父节点 UUID |
+| parent | string | 是 | 父节点 UUID |
 | name | string | 否 | 节点名称 |
-| type | string | 否 | 节点类型 |
+| type | string | 否 | 节点类型（自动创建对应组件和子节点） |
+| components | array | 否 | 额外组件类型数组（如 `["cc.Widget"]`） |
 
 ### 支持的 type 类型
 
-| 类别 | 类型 | 说明 |
+使用 `type` 参数时会**自动创建对应的组件和子节点**。
+
+| 类型 | 自动添加的组件 | 自动创建的子节点 |
 |------|------|------|
-| 基础 | cc.Camera | 相机 |
-| 2D | cc.Sprite, cc.Label, cc.Graphics | 精灵/文本/绘图 |
-| 2D | cc.Mask, cc.ParticleSystem2D, cc.TiledMap | 遮罩/粒子/地图 |
-| UI | cc.Button, cc.Canvas, cc.EditBox | 按钮/画布/输入框 |
-| UI | cc.Layout, cc.PageView, cc.ProgressBar | 布局/翻页/进度条 |
-| UI | cc.ScrollView, cc.Slider, cc.Toggle | 滚动/滑块/开关 |
-| UI | cc.RichText, cc.VideoPlayer, cc.WebView | 富文本/视频/网页 |
-| UI | cc.Widget | 对齐组件 |
-| 3D | cc.MeshRenderer, cc.Terrain | 网格/地形 |
+| cc.Camera | cc.Camera | - |
+| cc.Sprite | cc.Sprite | - |
+| cc.Label | cc.Label | - |
+| cc.Graphics | cc.Graphics | - |
+| cc.Mask | cc.Mask, cc.Graphics | - |
+| cc.ParticleSystem2D | cc.ParticleSystem2D | - |
+| cc.TiledMap | cc.TiledMap | - |
+| cc.Button | cc.Button, cc.Sprite | Label |
+| cc.Canvas | cc.Canvas, cc.Widget | Camera |
+| cc.EditBox | cc.Sprite, cc.EditBox | PLACEHOLDER_LABEL, TEXT_LABEL |
+| cc.Layout | cc.Layout | - |
+| cc.PageView | cc.Sprite, cc.PageView | view, indicator |
+| cc.ProgressBar | cc.Sprite, cc.ProgressBar | Bar |
+| cc.ScrollView | cc.Sprite, cc.ScrollView | scrollBar, view |
+| cc.Slider | cc.Sprite, cc.Slider | Handle |
+| cc.Toggle | cc.Sprite, cc.Toggle | Checkmark |
+| cc.ToggleGroupContainer | cc.ToggleGroupContainer | Toggle1, Toggle2, Toggle3 |
+| cc.RichText | cc.RichText | - |
+| cc.VideoPlayer | cc.VideoPlayer | - |
+| cc.WebView | cc.WebView | - |
+| cc.Widget | cc.Widget | - |
+| cc.MeshRenderer | cc.MeshRenderer | - |
+| cc.Terrain | cc.Terrain | - |
 
 ### 响应
 
@@ -257,8 +279,8 @@ cocos-skills scene restore-prefab <预制体UUID>
 # 1. 获取节点树，找到节点 UUID
 cocos-skills scene query-node-tree
 
-# 2. 创建节点
-cocos-skills scene create-node '{"parent": "父UUID", "name": "MyNode"}'
+# 2. 创建节点（parent 为必填）
+cocos-skills scene create-node '{"parent": "父节点UUID", "name": "MyNode"}'
 
 # 3. 复制节点
 cocos-skills scene copy-node <源节点UUID>

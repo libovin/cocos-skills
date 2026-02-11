@@ -17,14 +17,22 @@ interface PropertyDef {
 }
 
 /**
- * Component info from query-node __comps__
+ * Component info from simplified query-node response
  */
 interface ComponentInfo {
   type: string;
   uuid: string;
   enabled?: boolean;
-  value?: Record<string, unknown>;
-  extends?: string[];
+  props?: Record<string, unknown>;
+}
+
+/**
+ * Simplified node response from query-node postprocessor
+ */
+interface SimplifiedNode {
+  uuid: string;
+  name: string;
+  components?: ComponentInfo[];
 }
 
 /**
@@ -64,11 +72,12 @@ export const sceneSetPropertyPreprocessor: PreprocessorFn = async (
 
   try {
     // Query node to get component index
+    // 使用简化后的 query-node 返回结果（通过 postprocessor 处理）
     const result = await client.execute(
       'scene',
       'query-node',
-      [nodeUuid],
-      false
+      [nodeUuid]
+      // 不再需要 skipPostprocessor，直接使用简化后的结果
     );
 
     if (!result.success || !result.data) {
@@ -85,8 +94,8 @@ export const sceneSetPropertyPreprocessor: PreprocessorFn = async (
       pathPrefix = '';
     } else {
       // Component properties need __comps__.index prefix
-      const nodeData = result.data as Record<string, unknown>;
-      const components = nodeData.__comps__ as ComponentInfo[] | undefined;
+      const nodeData = result.data as SimplifiedNode;
+      const components = nodeData.components;
 
       // Find component index
       const componentIndex = findComponentIndex(components, componentType);

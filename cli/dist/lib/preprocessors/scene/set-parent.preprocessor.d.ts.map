@@ -1,1 +1,1 @@
-{"version":3,"file":"set-parent.preprocessor.d.ts","sourceRoot":"","sources":["../../../../src/lib/preprocessors/scene/set-parent.preprocessor.ts"],"names":[],"mappings":"AAAA;;;GAGG;AAGH,OAAO,KAAK,EAAE,cAAc,EAAE,MAAM,yBAAyB,CAAC;AA+D9D;;;GAGG;AACH,eAAO,MAAM,0BAA0B,EAAE,cA0DxC,CAAC"}
+{"version":3,"file":"set-parent.preprocessor.d.ts","sourceRoot":"","sources":["../../../../src/lib/preprocessors/scene/set-parent.preprocessor.ts"],"names":[],"mappings":"AAAA;;;GAGG;AAGH,OAAO,KAAK,EAAE,cAAc,EAAE,MAAM,yBAAyB,CAAC;AA8D9D;;;GAGG;AACH,eAAO,MAAM,0BAA0B,EAAE,cAyDxC,CAAC"}

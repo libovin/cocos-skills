@@ -1,32 +1,16 @@
 /**
  * Preprocessor for scene/query-node-tree
  *
- * Removes filter parameters before sending to server
- * The filter is applied client-side in the postprocessor
+ * Removes any parameters before sending to server
+ * The Cocos Creator API doesn't support query parameters
  */
-
 import type { PreprocessorFn } from '../../pipeline/types.js';
 import type { CocosClient } from '../../client.js';
 
-/**
- * Preprocessor that removes filter parameters
- *
- * The Cocos Creator API doesn't support filter parameters,
- * so we remove them before sending the request and apply
- * filtering in the postprocessor instead.
- *
- * We store the original params in metadata for the postprocessor to use.
- */
 export const sceneQueryNodeTreePreprocessor: PreprocessorFn = async (
-  params: unknown[],
+  _params: unknown[],
   _client: CocosClient
 ): Promise<unknown[]> => {
   // Always return empty array - don't send any params to server
-  // Store original params in metadata for postprocessor
-  const result: unknown[] & { __originalParams?: unknown[] } = [];
-
-  // Store original params in metadata for postprocessor
-  result.__originalParams = params;
-
-  return result;
+  return [];
 };

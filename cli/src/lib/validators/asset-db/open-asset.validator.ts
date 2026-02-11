@@ -1,115 +1,50 @@
 /**
  * Validate open-asset params
- * 验证 open-asset 参数，只允许打开 Cocos 内置的文件类型
  */
 
 import { ValidationError } from '../error.js';
 
-/**
- * Cocos Creator 支持的可打开的文件类型
- * 这些是可以在编辑器中打开的资源类型
- */
-const VALID_OPENABLE_EXTENSIONS = new Set([
-  // 场景和预制体
-  '.scene',
-  '.prefab',
-
-  // 动画相关
-  '.anim',
-  '.animask',
-
-  // 材质
-  '.material',
-  '.mtl',
-  '.pmtl',
-
-  // 图集
-  '.pac',
-  '.labelatlas',
-
-  // // 脚本
-  // '.ts',
-  // '.js',
-
-  // // 配置文件
-  // '.json',
-
-  // // 纹理 (可以在查看器中打开)
-  // '.png',
-  // '.jpg',
-  // '.jpeg',
-  // '.webp',
-  // '.bmp',
-
-  // // 音频 (可以在预览中播放)
-  // '.mp3',
-  // '.ogg',
-  // '.wav',
-  // '.m4a',
-
-  // // 字体
-  // '.ttf',
-  // '.otf',
-  // '.woff',
-  // '.woff2',
-
-  // 其他 Cocos 资源类型
-  '.fire',
-  '.asset',
-  '.effect',
-  '.mesh',
-  '.spline',
-  '.fnt',
-  '.spriteframe',
-  '.physics',
+const VALID_EXTENSIONS = new Set([
+  '.scene', '.prefab', '.anim', '.animask',
+  '.material', '.mtl', '.pmtl',
+  '.pac', '.labelatlas',
+  '.fire', '.asset', '.effect', '.mesh', '.spline', '.fnt', '.spriteframe', '.physics',
 ]);
 
-/**
- * 获取文件扩展名
- */
+const USAGE = `用法: cocos-skills asset-db open-asset <资源路径>
+
+示例:
+  cocos-skills asset-db open-asset db://assets/scenes/Main.scene
+  cocos-skills asset-db open-asset db://assets/prefabs/Player.prefab
+
+支持的类型: ${Array.from(VALID_EXTENSIONS).sort().join(', ')}`;
+
 function getFileExtension(path: string): string {
-  const lastDotIndex = path.lastIndexOf('.');
-  if (lastDotIndex === -1) {
-    return '';
-  }
-  return path.substring(lastDotIndex).toLowerCase();
+  const idx = path.lastIndexOf('.');
+  return idx === -1 ? '' : path.substring(idx).toLowerCase();
 }
 
-/**
- * 验证 open-asset 参数
- */
 export function validateOpenAsset(params: unknown[]): void {
   if (params.length < 1) {
-    throw new ValidationError('asset-db', 'open-asset', 'params', '至少需要 1 个参数：path');
+    throw new ValidationError('asset-db', 'open-asset', 'usage', `缺少资源路径\n\n${USAGE}`);
   }
 
   const [path] = params;
 
   if (typeof path !== 'string') {
-    throw new ValidationError('asset-db', 'open-asset', 'path', '必须是字符串类型');
+    throw new ValidationError('asset-db', 'open-asset', 'usage', `资源路径必须是字符串\n\n${USAGE}`);
   }
 
   if (!path.startsWith('db://assets/')) {
-    throw new ValidationError('asset-db', 'open-asset', 'path', '必须以 db://assets/ 开头');
+    throw new ValidationError('asset-db', 'open-asset', 'usage', `资源路径必须以 db://assets/ 开头\n\n${USAGE}`);
   }
 
-  const extension = getFileExtension(path);
-
-  if (!extension) {
-    throw new ValidationError(
-      'asset-db',
-      'open-asset',
-      'path',
-      '必须包含文件扩展名。支持的文件类型: ' + Array.from(VALID_OPENABLE_EXTENSIONS).sort().join(', ')
-    );
+  const ext = getFileExtension(path);
+  if (!ext) {
+    throw new ValidationError('asset-db', 'open-asset', 'usage', `资源路径需要包含扩展名\n\n${USAGE}`);
   }
 
-  if (!VALID_OPENABLE_EXTENSIONS.has(extension)) {
-    throw new ValidationError(
-      'asset-db',
-      'open-asset',
-      'path',
-      `不支持的文件类型: ${extension}。支持的文件类型: ` + Array.from(VALID_OPENABLE_EXTENSIONS).sort().join(', ')
-    );
+  if (!VALID_EXTENSIONS.has(ext)) {
+    throw new ValidationError('asset-db', 'open-asset', 'usage', `不支持的文件类型: ${ext}\n\n${USAGE}`);
   }
 }

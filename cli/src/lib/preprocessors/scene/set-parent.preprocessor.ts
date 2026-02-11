@@ -6,25 +6,24 @@
 import { ValidationError } from '../../validators/error.js';
 import type { PreprocessorFn } from '../../pipeline/types.js';
 import type { CocosClient } from '../../client.js';
-import type { ApiResponse } from '../../../types.js';
 
 /**
- * Node tree structure for cycle detection
+ * 简化后的节点结构（来自 query-node-tree postprocessor）
  */
-interface SceneNode {
+interface SimplifiedSceneNode {
   uuid: string;
   name: string;
-  children?: SceneNode[];
+  children?: SimplifiedSceneNode[];
 }
 
 /**
  * Build a UUID to node map for quick lookup
  */
-function buildNodeMap(nodes: SceneNode[], map: Map<string, SceneNode> = new Map()): Map<string, SceneNode> {
-  for (const node of nodes) {
-    map.set(node.uuid, node);
-    if (node.children && node.children.length > 0) {
-      buildNodeMap(node.children, map);
+function buildNodeMap(node: SimplifiedSceneNode, map: Map<string, SimplifiedSceneNode> = new Map()): Map<string, SimplifiedSceneNode> {
+  map.set(node.uuid, node);
+  if (node.children && node.children.length > 0) {
+    for (const child of node.children) {
+      buildNodeMap(child, map);
     }
   }
   return map;
@@ -33,7 +32,7 @@ function buildNodeMap(nodes: SceneNode[], map: Map<string, SceneNode> = new Map(
 /**
  * Get all descendant UUIDs of a node (traverse down the tree)
  */
-function getDescendantUuids(node: SceneNode, descendants: Set<string> = new Set()): Set<string> {
+function getDescendantUuids(node: SimplifiedSceneNode, descendants: Set<string> = new Set()): Set<string> {
   for (const child of node.children || []) {
     descendants.add(child.uuid);
     getDescendantUuids(child, descendants);
@@ -44,7 +43,7 @@ function getDescendantUuids(node: SceneNode, descendants: Set<string> = new Set(
 /**
  * Check if moving nodes to new parent would create a cycle
  */
-function checkCycle(nodeMap: Map<string, SceneNode>, nodeUuids: string[], parentUuid: string): void {
+function checkCycle(nodeMap: Map<string, SimplifiedSceneNode>, nodeUuids: string[], parentUuid: string): void {
   const parent = nodeMap.get(parentUuid);
   if (!parent) {
     // Parent not found in scene tree, might be a new node - can't check cycle
@@ -103,20 +102,19 @@ export const sceneSetParentPreprocessor: PreprocessorFn = async (
 
   try {
     // Query the scene node tree to check for cycles
-    const response = await (client as any)._request('POST', '/api/scene/query-node-tree', {
-      params: [],
-    }) as ApiResponse;
+    // 使用 client.execute 获取简化后的结果
+    const response = await client.execute('scene', 'query-node-tree', []);
 
     if (!response.success || !response.data) {
       // If we can't get the tree, skip validation (fail open)
       return params;
     }
 
-    const tree = response.data as { result?: SceneNode[] };
-    const nodes = tree.result || [];
+    // 简化后的 data 是根节点对象
+    const rootNode = response.data as SimplifiedSceneNode;
 
     // Build a map of UUID to node for quick lookup
-    const nodeMap = buildNodeMap(nodes);
+    const nodeMap = buildNodeMap(rootNode);
 
     // Check for cycles
     checkCycle(nodeMap, uuids as string[], parent as string);

@@ -6,38 +6,51 @@
 import { ValidationError } from '../error.js';
 import { isSupportedExtension, SUPPORTED_ASSET_EXTENSIONS } from '../../asset-templates.js';
 
+const USAGE = `用法: cocos-skills asset-db create-asset <资源路径>
+
+示例:
+  cocos-skills asset-db create-asset db://assets/scenes/Main.scene
+  cocos-skills asset-db create-asset db://assets/prefabs/Player.prefab
+  cocos-skills asset-db create-asset db://assets/materials/Gold.material`;
+
 export function validateCreateAsset(params: unknown[]): void {
+  // 检查参数数量
   if (params.length < 1) {
-    throw new ValidationError('asset-db', 'create-asset', 'params', '至少需要 1 个参数：path');
+    throw new ValidationError('asset-db', 'create-asset', 'usage', `缺少资源路径\n\n${USAGE}`);
   }
 
   if (params.length > 1) {
-    throw new ValidationError('asset-db', 'create-asset', 'params', '只支持 1 个参数：path（data 参数已移除，系统会自动生成默认数据）');
+    throw new ValidationError('asset-db', 'create-asset', 'usage', `只需提供一个资源路径\n\n${USAGE}`);
   }
 
   const [path] = params;
 
+  // 检查类型
   if (typeof path !== 'string') {
-    throw new ValidationError('asset-db', 'create-asset', 'path', '必须是字符串类型');
+    throw new ValidationError('asset-db', 'create-asset', 'usage', `资源路径必须是字符串\n\n${USAGE}`);
   }
 
+  // 检查路径格式
   if (!path.startsWith('db://assets/')) {
-    throw new ValidationError('asset-db', 'create-asset', 'path', '必须以 db://assets/ 开头');
+    throw new ValidationError('asset-db', 'create-asset', 'usage', `资源路径必须以 db://assets/ 开头\n\n${USAGE}`);
   }
 
+  // 检查扩展名
   const extension = getFileExtension(path);
-
   if (!extension) {
-    throw new ValidationError('asset-db', 'create-asset', 'path', '必须包含文件扩展名（如 .prefab、.scene、.material）');
+    throw new ValidationError('asset-db', 'create-asset', 'usage', `资源路径需要包含扩展名（如 .prefab、.scene）\n\n${USAGE}`);
   }
 
-  // 检查文件扩展名是否在支持的类型列表中
+  // 检查是否为支持的类型
   if (!isSupportedExtension(extension)) {
     throw new ValidationError(
       'asset-db',
       'create-asset',
-      'path',
-      `不支持的资源类型：${extension}\n\n支持的类型：${SUPPORTED_ASSET_EXTENSIONS.join(', ')}\n\n其他资源类型请直接在编辑器中创建`
+      'usage',
+      `不支持的资源类型: ${extension}
+
+支持的类型: ${SUPPORTED_ASSET_EXTENSIONS.join(', ')}
+其他类型请在编辑器中手动创建`
     );
   }
 }

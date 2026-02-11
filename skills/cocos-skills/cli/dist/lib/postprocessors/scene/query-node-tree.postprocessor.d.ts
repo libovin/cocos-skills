@@ -1,11 +1,10 @@
 /**
  * Postprocessor for scene/query-node-tree
- * 过滤和裁剪节点树数据
+ * 移除不必要的属性
  */
 import type { PostprocessorFn } from '../../pipeline/types.js';
 /**
- * Filter and trim node tree data
- * 过滤和裁剪节点树数据
+ * 简化 query-node-tree 返回结果
  */
 export declare const sceneQueryNodeTreePostprocessor: PostprocessorFn;
 //# sourceMappingURL=query-node-tree.postprocessor.d.ts.map

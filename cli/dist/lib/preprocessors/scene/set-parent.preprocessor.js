@@ -6,11 +6,11 @@ import { ValidationError } from '../../validators/error.js';
 /**
  * Build a UUID to node map for quick lookup
  */
-function buildNodeMap(nodes, map = new Map()) {
-    for (const node of nodes) {
-        map.set(node.uuid, node);
-        if (node.children && node.children.length > 0) {
-            buildNodeMap(node.children, map);
+function buildNodeMap(node, map = new Map()) {
+    map.set(node.uuid, node);
+    if (node.children && node.children.length > 0) {
+        for (const child of node.children) {
+            buildNodeMap(child, map);
         }
     }
     return map;
@@ -66,17 +66,16 @@ export const sceneSetParentPreprocessor = async (params, client) => {
     }
     try {
         // Query the scene node tree to check for cycles
-        const response = await client._request('POST', '/api/scene/query-node-tree', {
-            params: [],
-        });
+        // 使用 client.execute 获取简化后的结果
+        const response = await client.execute('scene', 'query-node-tree', []);
         if (!response.success || !response.data) {
             // If we can't get the tree, skip validation (fail open)
             return params;
         }
-        const tree = response.data;
-        const nodes = tree.result || [];
+        // 简化后的 data 是根节点对象
+        const rootNode = response.data;
         // Build a map of UUID to node for quick lookup
-        const nodeMap = buildNodeMap(nodes);
+        const nodeMap = buildNodeMap(rootNode);
         // Check for cycles
         checkCycle(nodeMap, uuids, parent);
     }

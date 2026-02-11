@@ -367,30 +367,50 @@ cocos-skills scene save-scene
   'create-node': {
     description: '创建新节点',
     parameters: [
-      { name: 'options', type: 'object', required: true, description: '节点配置对象，可选包含 parent(父节点UUID)、name(节点名称)、type(节点类型)、components(组件类型数组) 等' },
+      { name: 'options', type: 'object', required: true, description: '节点配置对象，必填 parent(父节点UUID)，可选 name(节点名称)、type(节点类型，自动创建对应组件和子节点)、components(额外组件类型数组) 等' },
     ],
     examples: [
-      'cocos-skills scene create-node \'{}\'',
-      'cocos-skills scene create-node \'{"name": "NewNode"}\'',
+      'cocos-skills scene create-node \'{"parent": "父节点UUID"}\'',
       'cocos-skills scene create-node \'{"parent": "父节点UUID", "name": "ChildNode"}\'',
-      'cocos-skills scene create-node \'{"type": "cc.Sprite", "name": "MySprite"}\'',
-      'cocos-skills scene create-node \'{"type": "cc.Canvas"}\'',
-      'cocos-skills scene create-node \'{"type": "cc.Button", "name": "Btn"}\'',
-      'cocos-skills scene create-node \'{"name": "CustomNode", "components": ["cc.Sprite", "cc.Button"]}\'',
+      'cocos-skills scene create-node \'{"parent": "父节点UUID", "type": "cc.Sprite", "name": "MySprite"}\'',
+      'cocos-skills scene create-node \'{"parent": "父节点UUID", "type": "cc.Button", "name": "Btn"}\'',
+      'cocos-skills scene create-node \'{"parent": "父节点UUID", "name": "CustomNode", "components": ["cc.Sprite", "cc.Button"]}\'',
     ],
     notes: `创建新节点并返回节点 UUID。
 
-options 可选属性：
-- parent: 父节点 UUID，不指定时添加到场景根节点
-- name: 节点名称，不指定时自动生成
-- type: 节点类型，指定后会自动添加相应组件和子节点
-- components: 组件类型数组，创建节点时直接添加指定组件（如 ["cc.Sprite", "cc.Button"]）
+options 属性：
+- parent: 父节点 UUID（必填）
+- name: 节点名称（可选，不指定时自动生成）
+- type: 节点类型（可选，指定后会自动添加相应组件和子节点）
+- components: 组件类型数组（可选，创建节点时直接添加指定组件）
 
-支持的 type 类型：
-- 基础类型: cc.Camera
-- 2D 对象: cc.Graphics, cc.Label, cc.Mask, cc.Sprite, cc.ParticleSystem2D, cc.TiledMap
-- UI 组件: cc.Button, cc.Canvas, cc.EditBox, cc.Layout, cc.PageView, cc.ProgressBar, cc.RichText, cc.ScrollView, cc.Slider, cc.Toggle, cc.VideoPlayer, cc.WebView, cc.Widget
-- 3D 对象: cc.MeshRenderer, cc.Terrain
+**type 参数会自动创建组件和子节点：**
+
+| 类型 | 自动添加的组件 | 自动创建的子节点 |
+|------|------|------|
+| cc.Camera | cc.Camera | - |
+| cc.Sprite | cc.Sprite | - |
+| cc.Label | cc.Label | - |
+| cc.Graphics | cc.Graphics | - |
+| cc.Mask | cc.Mask, cc.Graphics | - |
+| cc.ParticleSystem2D | cc.ParticleSystem2D | - |
+| cc.TiledMap | cc.TiledMap | - |
+| cc.Button | cc.Button, cc.Sprite | Label |
+| cc.Canvas | cc.Canvas, cc.Widget | Camera |
+| cc.EditBox | cc.Sprite, cc.EditBox | PLACEHOLDER_LABEL, TEXT_LABEL |
+| cc.Layout | cc.Layout | - |
+| cc.PageView | cc.Sprite, cc.PageView | view, indicator |
+| cc.ProgressBar | cc.Sprite, cc.ProgressBar | Bar |
+| cc.ScrollView | cc.Sprite, cc.ScrollView | scrollBar, view |
+| cc.Slider | cc.Sprite, cc.Slider | Handle |
+| cc.Toggle | cc.Sprite, cc.Toggle | Checkmark |
+| cc.ToggleGroupContainer | cc.ToggleGroupContainer | Toggle1, Toggle2, Toggle3 |
+| cc.RichText | cc.RichText | - |
+| cc.VideoPlayer | cc.VideoPlayer | - |
+| cc.WebView | cc.WebView | - |
+| cc.Widget | cc.Widget | - |
+| cc.MeshRenderer | cc.MeshRenderer | - |
+| cc.Terrain | cc.Terrain | - |
 
 使用 type 创建节点时会自动添加所需的组件和子节点结构（如 cc.Button 会自动添加 Sprite 和 Label 子节点）。
 使用 components 可以直接指定要添加的组件列表，与 type 参数互不影响，可以同时使用。
@@ -452,21 +472,32 @@ options 可选属性：
     description: '添加组件到节点',
     parameters: [
       { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
-      { name: 'component', type: 'string', required: true, description: '组件类型，支持内置组件（如 cc.Sprite、cc.Widget）和自定义脚本组件（直接使用脚本类名，如 Game2048）' },
+      { name: 'component', type: 'string | string[]', required: true, description: '组件类型，支持单个组件（字符串）或多个组件（数组）。内置组件使用 cc. 前缀（如 cc.Sprite），自定义脚本直接使用类名（如 Game2048）' },
     ],
     examples: [
       'cocos-skills scene create-component \'{"uuid": "节点UUID", "component": "cc.Widget"}\'',
       'cocos-skills scene create-component \'{"uuid": "节点UUID", "component": "cc.Camera"}\'',
       'cocos-skills scene create-component \'{"uuid": "节点UUID", "component": "cc.Animation"}\'',
       'cocos-skills scene create-component \'{"uuid":"2fMrHXUIVPnrsHYNLyMXI6","component": "Game2048"}\'',
+      'cocos-skills scene create-component \'{"uuid": "节点UUID", "component": ["cc.Widget", "cc.Button"]}\'',
+      'cocos-skills scene create-component \'{"uuid": "节点UUID", "component": ["cc.Sprite", "cc.Label", "Game2048"]}\'',
     ],
     notes: `参数必须是 JSON 对象格式，包含 uuid 和 component 字段。为节点添加指定类型的组件。
+
+**参数格式：**
+- 单个组件：\`{ "uuid": "节点UUID", "component": "cc.Sprite" }\`
+- 批量添加：\`{ "uuid": "节点UUID", "component": ["cc.Sprite", "cc.Label"] }\`
+
+**批量添加说明：**
+- component 可以是字符串数组，同时添加多个组件
+- 如果某个组件已存在，会自动跳过该组件，只添加不存在的组件
+- 返回结果会显示哪些组件已跳过
 
 **支持的组件类型：**
 1. **内置组件**：使用 cc. 前缀，如 cc.Sprite、cc.Widget、cc.Camera、cc.Animation 等
 2. **自定义脚本组件**：使用 @ccclass 装饰器中注册的名称
 
-自定义脚本示例：
+**自定义脚本示例：**
 \`\`\`typescript
 import { _decorator, Component } from 'cc';
 const { ccclass } = _decorator;
@@ -526,47 +557,82 @@ export class Game2048 extends Component {
     notes: '在编辑器场景上下文中执行 JavaScript 脚本方法。需要先在场景中注册相应的脚本方法。常用于复杂的批量操作或调试',
   },
   'query-node': {
-    description: '查询节点的详细信息',
+    description: '查询节点的详细信息（支持预设简化输出）',
     parameters: [
-      { name: 'uuid', type: 'string', required: true, description: '节点 UUID。可以通过以下方式获取：1) 使用 query-node-tree 命令查看场景节点树，每个节点都包含 uuid 字段；2) 在 Cocos Creator 编辑器中选中节点，在属性检查器中可以看到节点的 UUID；3) 使用 query-nodes-by-asset-uuid 命令查找使用特定资源的节点' },
+      { name: 'uuid', type: 'string', required: true, description: '节点 UUID' },
+      { name: 'filter', type: 'string|object', required: false, description: '过滤选项。可以是预设名称（minimal/basic/components/full）或选项对象' },
     ],
     examples: [
       'cocos-skills scene query-node 节点UUID',
-      'cocos-skills scene query-node 根节点UUID',
+      'cocos-skills scene query-node 节点UUID minimal',
+      'cocos-skills scene query-node 节点UUID basic',
+      'cocos-skills scene query-node 节点UUID components',
     ],
-    notes: '返回节点的详细信息，包括：\n- 基本属性：name（名称）、active（是否激活）、locked（是否锁定）、type（类型）、path（路径）\n- 变换属性：position（位置）、rotation（旋转）、scale（缩放）\n- 组件信息：__comps__ 字段包含所有组件的详细信息，每个组件包含 type（组件类型）、uuid（组件 UUID）、enabled（是否启用）、value（组件属性值）和 extends（继承的类）\n- 预制体信息：prefab 字段包含预制体状态信息\n- 父节点信息：parent 字段包含父节点的 UUID',
+    notes: `查询节点的详细信息。
+
+**预设配置：**
+- \`minimal\` - 仅 uuid, name, path, active（最精简）
+- \`basic\` - 基本信息 + position, scale
+- \`components\` - 基本信息 + 简化的组件列表
+- \`full\` - 完整原始数据（默认）
+
+**选项参数（JSON 对象）：**
+\`\`\`json
+{
+  "only": ["uuid", "name", "position"],
+  "withComponents": true,
+  "simplifyComponents": true
+}
+\`\`\`
+
+**简化后的输出格式：**
+\`\`\`json
+{
+  "uuid": "节点UUID",
+  "name": "Sprite",
+  "path": "/Canvas/Sprite",
+  "active": true,
+  "position": {"x": 0, "y": 0, "z": 0},
+  "scale": {"x": 1, "y": 1, "z": 1},
+  "components": [
+    {"type": "cc.Sprite", "uuid": "组件UUID", "enabled": true}
+  ],
+  "parent": "父节点UUID"
+}
+\`\`\`
+
+**获取节点 UUID：**
+1. 使用 \`query-node-tree\` 命令查看场景节点树
+2. 在 Cocos Creator 编辑器中选中节点，属性检查器显示 UUID`,
   },
   'query-node-tree': {
     description: '查询场景的节点树结构',
-    parameters: [
-      { name: 'filter', type: 'string|object', required: false, description: '过滤选项。可以是预设名称（minimal/basic/shallow/full）或选项对象。选项对象包含：maxDepth（最大深度）、only（字段列表，字符串或数组）、onlyActive（仅激活节点）' },
-    ],
+    parameters: [],
     examples: [
       'cocos-skills scene query-node-tree',
-      'cocos-skills scene query-node-tree minimal',
-      'cocos-skills scene query-node-tree basic',
-      'cocos-skills scene query-node-tree \'{"only":"uuid,name,path"}\'',
-      'cocos-skills scene query-node-tree \'{"only":["uuid","name","active"]}\'',
-      'cocos-skills scene query-node-tree \'{"onlyActive":true}\'',
     ],
-    notes: `返回场景的节点层级结构，每个节点包含 uuid、name、children、components 等属性。
+    notes: `返回场景的节点层级结构。
 
-**预设配置 (Presets)：**
-- \`minimal\` - 仅 uuid 和 name（最精简）
-- \`basic\` - uuid、name、path、active（基本信息）
-- \`full\` - 完整信息，含组件（等同于默认行为）
+**返回结构：**
+每个节点包含以下属性：
+- \`uuid\` - 节点 UUID
+- \`name\` - 节点名称
+- \`active\` - 是否激活
+- \`locked\` - 是否锁定
+- \`type\` - 节点类型（如 cc.Node、cc.Scene）
+- \`path\` - 节点路径（如 "Canvas/Game2048"）
+- \`components\` - 组件列表，每个组件包含：
+  - \`type\` - 组件类型（如 cc.Sprite、cc.Label）
+  - \`value\` - 组件 UUID
+  - \`isCustom\` - 是否为自定义脚本组件
+  - \`extends\` - 组件继承链
+- \`children\` - 子节点列表（递归结构）
 
-**选项参数：**
-- \`only\`: 字符串或数组，指定包含的字段（字符串支持逗号分隔，如 "uuid,name,path"）
-- \`onlyActive\`: 布尔值，是否仅包含激活的节点（默认 false）
-
-**使用示例：**
-1. 完整树（默认）：\`cocos-skills scene query-node-tree\`
-2. 使用预设：\`cocos-skills scene query-node-tree minimal\`
-4. 指定字段（字符串）：\`cocos-skills scene query-node-tree '{"only":"uuid,name,active"}'\`
-5. 指定字段（数组）：\`cocos-skills scene query-node-tree '{"only":["uuid","name"]}'\`
-6. 仅激活节点：\`cocos-skills scene query-node-tree '{"onlyActive":true}'\`
-7. 组合选项：\`cocos-skills scene query-node-tree '{"only":"uuid,name","onlyActive":true}'\``,
+**已移除的属性：**
+- \`prefab\` - prefab 状态信息
+- \`parent\` - 父节点 UUID（已通过嵌套结构体现）
+- \`isScene\` - 场景标记（可从 type 推断）
+- \`readonly\` - 只读标记`,
   },
   'query-nodes-by-asset-uuid': {
     description: '查询所有使用指定资源的节点',

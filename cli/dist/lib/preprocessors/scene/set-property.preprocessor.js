@@ -32,7 +32,10 @@ export const sceneSetPropertyPreprocessor = async (params, client) => {
     }
     try {
         // Query node to get component index
-        const result = await client.execute('scene', 'query-node', [nodeUuid], false);
+        // 使用简化后的 query-node 返回结果（通过 postprocessor 处理）
+        const result = await client.execute('scene', 'query-node', [nodeUuid]
+        // 不再需要 skipPostprocessor，直接使用简化后的结果
+        );
         if (!result.success || !result.data) {
             return params;
         }
@@ -46,7 +49,7 @@ export const sceneSetPropertyPreprocessor = async (params, client) => {
         else {
             // Component properties need __comps__.index prefix
             const nodeData = result.data;
-            const components = nodeData.__comps__;
+            const components = nodeData.components;
             // Find component index
             const componentIndex = findComponentIndex(components, componentType);
             if (componentIndex === -1) {
