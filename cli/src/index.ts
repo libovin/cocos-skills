@@ -8,6 +8,7 @@
 import { Command } from 'commander';
 import {
   execute,
+  executeRaw,
   healthCheck,
   getStatus,
   listAllModules,
@@ -242,7 +243,8 @@ program
   .description('Cocos Creator HTTP API Tool')
   .version('1.0.0')
   .option('--json', 'Output in JSON format (default)', true)
-  .option('--verbose', 'Show detailed output');
+  .option('--verbose', 'Show detailed output')
+  .option('--raw', 'Output raw API response without validation or processing');
 
 // Global commands
 program
@@ -332,7 +334,12 @@ for (const moduleName of modules) {
 
       // Parse and execute the action
       const parsedParams = parseParams(params);
-      const result = await execute(moduleName, action, parsedParams);
+      const options = program.opts();
+      const useRaw = options.raw === true;
+
+      const result = useRaw
+        ? await executeRaw(moduleName, action, parsedParams)
+        : await execute(moduleName, action, parsedParams);
       console.log(JSON.stringify(result, null, 2));
 
       if (!result.success) {

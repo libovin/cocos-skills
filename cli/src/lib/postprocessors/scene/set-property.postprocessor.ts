@@ -27,53 +27,44 @@ export const sceneSetPropertyPostprocessor: PostprocessorFn = async (
   originalParams: unknown[],
   client: CocosClient
 ): Promise<ApiResponse> => {
-  // Check if there are prepared calls from preprocessor
   const resultData = result.data as Record<string, unknown> | undefined;
   const calls = resultData?.calls as SetPropertyCall[] | undefined;
 
-  // If no prepared calls, return original result
   if (!calls || !Array.isArray(calls) || calls.length === 0) {
     return result;
   }
 
-  // Execute all prepared set-property calls
-  const results: Array<{ path: string; success: boolean; error?: string }> = [];
+  const results: Array<{ call: SetPropertyCall; result: unknown }> = [];
+  let successCount = 0;
 
   for (const call of calls) {
     try {
-      const setResult = await client.execute(
+      const setResult = await client.executeRaw(
         'scene',
         'set-property',
-        [call],
-        false
+        [call]
       );
-      results.push({
-        path: call.path,
-        success: setResult.data as boolean,
-      });
+      results.push({ call, result: setResult });
+      if (setResult.success) successCount++;
     } catch (error) {
       results.push({
-        path: call.path,
-        success: false,
-        error: error instanceof Error ? error.message : String(error),
+        call,
+        result: {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
       });
     }
   }
 
-  // Calculate success count
-  const successCount = results.filter((r) => r.success).length;
+  const failedCount = calls.length - successCount;
 
-  // Return merged results
   return {
-    success: successCount === calls.length,
+    success: failedCount === 0,
     data: {
-      totalProperties: calls.length,
-      successCount,
-      failedCount: calls.length - successCount,
+      success: successCount,
+      failed: failedCount,
       results,
-      message: successCount === calls.length
-        ? `All ${calls.length} properties set successfully`
-        : `${successCount}/${calls.length} properties set successfully`,
     },
   };
 };

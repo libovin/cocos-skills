@@ -6,44 +6,37 @@
  * Postprocessor that executes prepared set-property calls from preprocessor
  */
 export const sceneSetPropertyPostprocessor = async (result, originalParams, client) => {
-    // Check if there are prepared calls from preprocessor
     const resultData = result.data;
     const calls = resultData?.calls;
-    // If no prepared calls, return original result
     if (!calls || !Array.isArray(calls) || calls.length === 0) {
         return result;
     }
-    // Execute all prepared set-property calls
     const results = [];
+    let successCount = 0;
     for (const call of calls) {
         try {
-            const setResult = await client.execute('scene', 'set-property', [call], false);
-            results.push({
-                path: call.path,
-                success: setResult.data,
-            });
+            const setResult = await client.executeRaw('scene', 'set-property', [call]);
+            results.push({ call, result: setResult });
+            if (setResult.success)
+                successCount++;
         }
         catch (error) {
             results.push({
-                path: call.path,
-                success: false,
-                error: error instanceof Error ? error.message : String(error),
+                call,
+                result: {
+                    success: false,
+                    error: error instanceof Error ? error.message : String(error),
+                },
             });
         }
     }
-    // Calculate success count
-    const successCount = results.filter((r) => r.success).length;
-    // Return merged results
+    const failedCount = calls.length - successCount;
     return {
-        success: successCount === calls.length,
+        success: failedCount === 0,
         data: {
-            totalProperties: calls.length,
-            successCount,
-            failedCount: calls.length - successCount,
+            success: successCount,
+            failed: failedCount,
             results,
-            message: successCount === calls.length
-                ? `All ${calls.length} properties set successfully`
-                : `${successCount}/${calls.length} properties set successfully`,
         },
     };
 };

@@ -2,20 +2,39 @@
  * Validate set-property params
  */
 import { ValidationError } from '../error.js';
+import { isValidProperty, getPropertiesForComponent, isBuiltinComponent } from './component-properties.js';
 const USAGE = `用法: cocos-skills scene set-property '<JSON配置>'
 
-示例（单属性）:
-  cocos-skills scene set-property '{"uuid":"xxx","path":"position","dump":{"value":[0,0,0],"type":"Vec3"}}'
+示例（设置节点属性，component 可省略）:
+  cocos-skills scene set-property '{"uuid":"xxx","properties":[{"name":"position","value":[0,0,0],"type":"Vec3"}]}'
 
-示例（批量设置）:
+示例（设置组件属性）:
   cocos-skills scene set-property '{"uuid":"xxx","component":"cc.Sprite","properties":[{"name":"color","value":[255,0,0,255],"type":"Color"}]}'
+
+示例（设置自定义脚本属性）:
+  cocos-skills scene set-property '{"uuid":"xxx","component":"MyScript","properties":[{"name":"speed","value":100,"type":"Number"}]}'
 
 字段说明:
   uuid       - 节点UUID（必填）
-  path       - 属性路径（单属性模式）
-  dump       - 属性值对象，包含 value 和 type（单属性模式）
-  component  - 组件类型（批量模式）
-  properties - 属性数组，每项包含 name、value、type（批量模式）`;
+  component  - 组件类型（可选，默认为 cc.Node）
+  properties - 属性数组，每项包含 name、value、type
+
+内置组件类型:
+  cc.Node, cc.UITransform, cc.Sprite, cc.Label, cc.Button, cc.Widget,
+  cc.Layout, cc.RichText, cc.EditBox, cc.Slider, cc.ProgressBar, cc.Toggle,
+  cc.ToggleContainer, cc.ScrollView, cc.PageView, cc.Mask, cc.Camera,
+  cc.Animation, cc.AudioSource, cc.RigidBody2D, cc.BoxCollider2D,
+  cc.CircleCollider2D, cc.ParticleSystem2D
+
+注意: 自定义脚本组件的属性名将动态查询验证`;
+function buildPropertyHint(componentType) {
+    const props = getPropertiesForComponent(componentType);
+    if (props.length === 0) {
+        return '';
+    }
+    const propList = props.map((p) => `  ${p.name}: ${p.type}`).join('\n');
+    return `\n\n${componentType} 支持的属性:\n${propList}`;
+}
 export function validateSetProperty(params) {
     if (params.length !== 1) {
         throw new ValidationError('scene', 'set-property', 'usage', `需要提供一个 JSON 配置对象\n\n${USAGE}`);
@@ -28,11 +47,13 @@ export function validateSetProperty(params) {
     if (typeof uuid !== 'string' || uuid.trim() === '') {
         throw new ValidationError('scene', 'set-property', 'usage', `uuid 不能为空\n\n${USAGE}`);
     }
-    const isBatch = component !== undefined || properties !== undefined;
+    const isBatch = properties !== undefined;
     if (isBatch) {
         // 批量模式
-        if (typeof component !== 'string' || component.trim() === '') {
-            throw new ValidationError('scene', 'set-property', 'usage', `component 不能为空\n\n${USAGE}`);
+        // component 是可选的，默认为 cc.Node
+        const actualComponent = component ?? 'cc.Node';
+        if (component !== undefined && typeof component !== 'string') {
+            throw new ValidationError('scene', 'set-property', 'usage', `component 必须是字符串\n\n${USAGE}`);
         }
         if (!Array.isArray(properties) || properties.length === 0) {
             throw new ValidationError('scene', 'set-property', 'usage', `properties 必须是非空数组\n\n${USAGE}`);
@@ -51,6 +72,11 @@ export function validateSetProperty(params) {
             }
             if (typeof p.type !== 'string' || p.type.trim() === '') {
                 throw new ValidationError('scene', 'set-property', 'usage', `properties[${i}].type 不能为空\n\n${USAGE}`);
+            }
+            // 只对内置组件进行属性验证，自定义脚本组件跳过验证（由 preprocessor 动态查询）
+            if (isBuiltinComponent(actualComponent) && !isValidProperty(actualComponent, p.name)) {
+                const hint = buildPropertyHint(actualComponent);
+                throw new ValidationError('scene', 'set-property', 'usage', `属性名 "${p.name}" 无效${hint}`);
             }
         }
     }

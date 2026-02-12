@@ -93,13 +93,13 @@ export class CocosClient {
   }
 
   /**
-   * Execute an API call
-   * @param module Module name
-   * @param action Action name
-   * @param params Parameters array
-   * @param validate Whether to validate module/action
-   * @returns API response
-   */
+ * Execute an API call
+ * @param module Module name
+ * @param action Action name
+ * @param params Parameters array
+ * @param validate Whether to validate module/action
+ * @returns API response
+ */
   async execute(
     module: string,
     action: string,
@@ -154,6 +154,25 @@ export class CocosClient {
     );
 
     return finalResult;
+  }
+
+  /**
+   * Execute an API call in raw mode (no validation, no preprocessing/postprocessing)
+   * @param module Module name
+   * @param action Action name
+   * @param params Parameters array
+   * @returns Raw API response
+   */
+  async executeRaw(
+    module: string,
+    action: string,
+    params: unknown[] = []
+  ): Promise<ApiResponse> {
+    // Make API call directly without any processing
+    const result = await this._request('POST', `/api/${module}/${action}`, {
+      params,
+    });
+    return result;
   }
 
   /**
@@ -248,6 +267,18 @@ export async function execute(
 ): Promise<ApiResponse> {
   const client = getClient();
   return client.execute(module, action, params);
+}
+
+/**
+ * Execute an API call in raw mode (no validation, no preprocessing/postprocessing)
+ */
+export async function executeRaw(
+  module: string,
+  action: string,
+  params?: unknown[]
+): Promise<ApiResponse> {
+  const client = getClient();
+  return client.executeRaw(module, action, params);
 }
 
 /**

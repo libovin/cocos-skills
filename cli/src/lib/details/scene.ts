@@ -68,15 +68,18 @@ UUID/路径转换：
   'set-property': {
     description: '设置节点或组件属性值（支持节点属性、组件属性、组件引用绑定等）',
     parameters: [
-      { name: 'options', type: 'object', required: true, description: '属性设置选项对象。支持两种格式：1) 传统格式：{uuid, path, dump}；2) 批量格式：{uuid, component, properties}。component 为组件类型（如 cc.Sprite、cc.Label、cc.Node），properties 为属性数组' },
+      { name: 'options', type: 'object', required: true, description: '属性设置选项对象。支持两种格式：1) 传统格式：{uuid, path, dump}；2) 批量格式：{uuid, properties} 或 {uuid, component, properties}。component 可选，默认为 cc.Node' },
     ],
     examples: [
       // 节点属性示例 - 传统格式
       'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "position", "dump": {"value": {"x":100,"y":200,"z":0}, "type": "cc.Vec3"}}\'',
       'cocos-skills scene set-property \'{"uuid": "节点UUID", "path": "scale", "dump": {"value": {"x":2,"y":2,"z":1}, "type": "cc.Vec3"}}\'',
 
-      // 批量设置示例 - 新格式（推荐）
-      'cocos-skills scene set-property \'{"uuid": "节点UUID", "component": "cc.Node", "properties": [{"name": "position", "value": {"x":100,"y":200,"z":0}, "type": "cc.Vec3"}, {"name": "scale", "value": {"x":2,"y":2,"z":1}, "type": "cc.Vec3"}]}\'',
+      // 批量设置节点属性 - component 可省略（默认 cc.Node）
+      'cocos-skills scene set-property \'{"uuid": "节点UUID", "properties": [{"name": "position", "value": {"x":100,"y":200,"z":0}, "type": "cc.Vec3"}, {"name": "scale", "value": {"x":2,"y":2,"z":1}, "type": "cc.Vec3"}]}\'',
+      // 批量设置节点属性 - 显式指定 cc.Node
+      'cocos-skills scene set-property \'{"uuid": "节点UUID", "component": "cc.Node", "properties": [{"name": "position", "value": {"x":100,"y":200,"z":0}, "type": "cc.Vec3"}]}\'',
+      // 批量设置组件属性
       'cocos-skills scene set-property \'{"uuid": "节点UUID", "component": "cc.Sprite", "properties": [{"name": "_color", "value": {"r":255,"g":0,"b":0,"a":255}, "type": "cc.Color"}]}\'',
       'cocos-skills scene set-property \'{"uuid": "节点UUID", "component": "cc.Label", "properties": [{"name": "_string", "value": "Hello World", "type": "cc.String"}, {"name": "_fontSize", "value": 32, "type": "cc.Number"}]}\'',
 
@@ -106,7 +109,7 @@ set-property 支持两种参数格式：**传统格式**和**批量格式**。
 \`\`\`json
 {
   "uuid": "节点UUID",
-  "component": "组件类型",
+  "component": "组件类型",  // 可选，默认为 cc.Node
   "properties": [
     {"name": "属性名", "value": 属性值, "type": "类型标识"},
     {"name": "属性名", "value": 属性值, "type": "类型标识"}
@@ -115,7 +118,12 @@ set-property 支持两种参数格式：**传统格式**和**批量格式**。
 \`\`\`
 
 **批量格式说明：**
-- \`component\`: 组件类型，如 \`cc.Node\`（节点属性）、\`cc.Sprite\`（精灵组件）、\`cc.Label\`（标签组件）等
+- \`component\`: 组件类型，**可选**，默认为 \`cc.Node\`
+  - 省略时：设置节点属性（position, scale, eulerAngles 等）
+  - \`cc.Node\`: 节点属性
+  - \`cc.Sprite\`: 精灵组件属性
+  - \`cc.Label\`: 标签组件属性
+  - 其他组件类型...
 - \`properties\`: 属性数组，每个元素包含：
   - \`name\`: 属性名（节点属性直接用属性名，组件属性用下划线开头的属性名）
   - \`value\`: 属性值
@@ -140,10 +148,9 @@ set-property 支持两种参数格式：**传统格式**和**批量格式**。
 **批量格式使用示例：**
 
 \`\`\`javascript
-// 批量设置节点属性
+// 批量设置节点属性（component 可省略）
 cocos-skills scene set-property '{
   "uuid": "节点UUID",
-  "component": "cc.Node",
   "properties": [
     {"name": "position", "value": {"x":100,"y":200,"z":0}, "type": "cc.Vec3"},
     {"name": "scale", "value": {"x":2,"y":2,"z":1}, "type": "cc.Vec3"}

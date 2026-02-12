@@ -93,9 +93,8 @@ cocos-skills asset-db query-uuid db://assets/prefabs/Tile.prefab
 
 | 操作 | 命令 |
 |------|------|
-| 设置位置（传统格式） | `cocos-skills scene set-property '{"uuid":"<uuid>","path":"position","dump":{"value":{"x":0,"y":0,"z":0},"type":"cc.Vec3"}}'` |
-| 批量设置节点属性 | `cocos-skills scene set-property '{"uuid":"<uuid>","component":"cc.Node","properties":[{"name":"position","value":{"x":100,"y":200,"z":0},"type":"cc.Vec3"}]}'` |
-| 批量设置组件属性 | `cocos-skills scene set-property '{"uuid":"<uuid>","component":"cc.Sprite","properties":[{"name":"_color","value":{"r":255,"g":0,"b":0,"a":255},"type":"cc.Color"}]}'` |
+| 设置节点属性（component 可省略） | `cocos-skills scene set-property '{"uuid":"<uuid>","properties":[{"name":"position","value":{"x":100,"y":200,"z":0},"type":"cc.Vec3"}]}'` |
+| 设置组件属性 | `cocos-skills scene set-property '{"uuid":"<uuid>","component":"cc.Sprite","properties":[{"name":"color","value":{"r":255,"g":0,"b":0,"a":255},"type":"cc.Color"}]}'` |
 | 绑定节点引用 | `cocos-skills scene set-property '{"uuid":"<uuid>","component":"cc.Button","properties":[{"name":"target","value":{"uuid":"<target_uuid>"},"type":"cc.Node"}]}'` |
 | 绑定预制体引用 | `cocos-skills scene set-property '{"uuid":"<uuid>","component":"cc.Button","properties":[{"name":"tilePrefab","value":{"uuid":"<prefab_uuid>"},"type":"cc.Prefab"}]}'` |
 
@@ -112,44 +111,25 @@ cocos-skills asset-db query-uuid db://assets/prefabs/Tile.prefab
 
 ## 属性设置格式
 
-### 批量格式（推荐）
-
-使用 `component` 指定组件类型，`properties` 数组批量设置多个属性：
+使用 `properties` 数组批量设置多个属性，`component` 可选（默认为 `cc.Node`）：
 
 ```json
 {
   "uuid": "节点UUID",
-  "component": "cc.Sprite",
+  "component": "cc.Sprite",  // 可选，默认为 cc.Node
   "properties": [
-    {"name": "_color", "value": {"r":255,"g":0,"b":0,"a":255}, "type": "cc.Color"},
-    {"name": "_useOriginalSize", "value": false, "type": "cc.Boolean"}
+    {"name": "color", "value": {"r":255,"g":0,"b":0,"a":255}, "type": "cc.Color"},
+    {"name": "sizeMode", "value": 0, "type": "cc.Number"}
   ]
 }
 ```
 
 **component 可选值：**
-- `cc.Node` - 节点属性（position, scale, eulerAngles 等）
+- 省略或 `cc.Node` - 节点属性（position, scale, angle 等）
 - `cc.Sprite` - 精灵组件属性
 - `cc.Label` - 标签组件属性
 - `cc.Button` - 按钮组件属性
-- 其他组件类型...
-
-### 传统格式（单属性）
-
-```json
-{
-  "uuid": "节点UUID",
-  "path": "属性路径",
-  "dump": {
-    "value": "属性值",
-    "type": "类型标识"
-  }
-}
-```
-
-**路径格式：**
-- 节点属性：直接使用属性名（如 `position`, `scale`）
-- 组件属性：使用 `__comps__.索引.属性名`（如 `__comps__.0._color`）
+- 自定义脚本 - 动态查询属性验证
 
 ---
 
@@ -176,7 +156,7 @@ cocos-skills scene set-property '{
   "uuid": "ButtonUUID",
   "component": "cc.UITransform",
   "properties": [
-    {"name": "_contentSize", "value": {"width":200,"height":60}, "type": "cc.Size"}
+    {"name": "contentSize", "value": {"width":200,"height":60}, "type": "cc.Size"}
   ]
 }'
 
@@ -184,7 +164,7 @@ cocos-skills scene set-property '{
   "uuid": "ButtonUUID",
   "component": "cc.Sprite",
   "properties": [
-    {"name": "_color", "value": {"r":100,"g":200,"b":100,"a":255}, "type": "cc.Color"}
+    {"name": "color", "value": {"r":100,"g":200,"b":100,"a":255}, "type": "cc.Color"}
   ]
 }'
 
@@ -207,10 +187,9 @@ cocos-skills scene create-component '{
 ### 示例 3：批量设置属性
 
 ```bash
-# 批量设置节点属性
+# 批量设置节点属性（component 可省略）
 cocos-skills scene set-property '{
   "uuid": "NodeUUID",
-  "component": "cc.Node",
   "properties": [
     {"name": "position", "value": {"x":100,"y":200,"z":0}, "type": "cc.Vec3"},
     {"name": "scale", "value": {"x":2,"y":2,"z":1}, "type": "cc.Vec3"}
@@ -222,9 +201,9 @@ cocos-skills scene set-property '{
   "uuid": "NodeUUID",
   "component": "cc.Label",
   "properties": [
-    {"name": "_string", "value": "Hello World", "type": "cc.String"},
-    {"name": "_fontSize", "value": 32, "type": "cc.Number"},
-    {"name": "_color", "value": {"r":0,"g":255,"b":0,"a":255}, "type": "cc.Color"}
+    {"name": "string", "value": "Hello World", "type": "cc.String"},
+    {"name": "fontSize", "value": 32, "type": "cc.Number"},
+    {"name": "color", "value": {"r":0,"g":255,"b":0,"a":255}, "type": "cc.Color"}
   ]
 }'
 ```
@@ -287,39 +266,56 @@ cocos-skills scene save-scene
 | 属性名 | 类型 | 说明 |
 |--------|------|------|
 | `position` | cc.Vec3 | 世界坐标位置 |
-| `_lpos` | cc.Vec3 | 本地坐标位置 |
 | `scale` | cc.Vec3 | 缩放比例 |
-| `eulerAngles` | cc.Vec3 | 欧拉角旋转（度） |
-| `angle` | cc.Number | 2D 旋转角度 |
+| `angle` | cc.Vec3 | 旋转角度 |
+| `layer` | cc.Enum | 层级 |
+| `mobility` | cc.Enum | 移动性 (0=Static, 1=Stationary, 2=Movable) |
+| `name` | cc.String | 节点名称 |
+| `active` | cc.Boolean | 是否激活 |
 
 ### UITransform 组件
 
 | 属性名 | 类型 | 说明 |
 |--------|------|------|
-| `_contentSize` | cc.Size | 内容尺寸 |
-| `_anchorPoint` | cc.Vec2 | 锚点位置 |
+| `contentSize` | cc.Size | 内容尺寸 |
+| `anchorPoint` | cc.Vec2 | 锚点位置 |
 
 ### Sprite 组件
 
 | 属性名 | 类型 | 说明 |
 |--------|------|------|
-| `_color` | cc.Color | 颜色 |
+| `color` | cc.Color | 颜色 |
 | `spriteFrame` | cc.SpriteFrame | 精灵帧 |
+| `type` | cc.Enum | 精灵类型 (0=SIMPLE, 1=SLICED, 2=TILED, 3=FILLED) |
+| `sizeMode` | cc.Enum | 尺寸模式 (0=CUSTOM, 1=TRIMMED, 2=RAW) |
 
 ### Label 组件
 
 | 属性名 | 类型 | 说明 |
 |--------|------|------|
-| `_string` | cc.String | 文本内容 |
-| `_fontSize` | cc.Number | 字体大小 |
-| `_color` | cc.Color | 文本颜色 |
+| `string` | cc.String | 文本内容 |
+| `fontSize` | cc.Number | 字体大小 |
+| `color` | cc.Color | 文本颜色 |
+| `lineHeight` | cc.Number | 行高 |
+| `overflow` | cc.Enum | 溢出模式 (0=NONE, 1=CLAMP, 2=SHRINK, 3=RESIZE_HEIGHT) |
 
 ### Button 组件
 
 | 属性名 | 类型 | 说明 |
 |--------|------|------|
-| `_interactable` | cc.Boolean | 是否可交互 |
+| `interactable` | cc.Boolean | 是否可交互 |
+| `transition` | cc.Enum | 过渡类型 (0=无, 1=颜色, 2=精灵, 3=缩放) |
 | `target` | cc.Node | 目标节点 |
+
+### Widget 组件
+
+| 属性名 | 类型 | 说明 |
+|--------|------|------|
+| `top` | cc.Number | 上边距 |
+| `bottom` | cc.Number | 下边距 |
+| `left` | cc.Number | 左边距 |
+| `right` | cc.Number | 右边距 |
+| `isAbsoluteTop` | cc.Boolean | 上边距是否绝对值 |
 
 ---
 
