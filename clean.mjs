@@ -11,20 +11,20 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Clean main cli/dist
-const distDir = path.join(__dirname, 'cli', 'dist');
+// Clean main scripts/dist
+const distDir = path.join(__dirname, 'scripts', 'dist');
 let cleaned = false;
 if (fs.existsSync(distDir)) {
   fs.rmSync(distDir, { recursive: true, force: true });
-  console.log('✓ Removed cli/dist');
+  console.log('✓ Removed scripts/dist');
   cleaned = true;
 }
 
 // Clean copied dist in skills folder
-const skillsDistDir = path.join(__dirname, 'skills', 'cocos-skills', 'cli', 'dist');
+const skillsDistDir = path.join(__dirname, 'skills', 'cocos-skills', 'scripts', 'dist');
 if (fs.existsSync(skillsDistDir)) {
   fs.rmSync(skillsDistDir, { recursive: true, force: true });
-  console.log('✓ Removed skills/cocos-skills/cli/dist');
+  console.log('✓ Removed skills/cocos-skills/scripts/dist');
   cleaned = true;
 }
 

@@ -13,7 +13,7 @@ const __dirname = dirname(__filename);
 const args = process.argv.slice(2);
 
 // The CLI is copied to the skills folder during build, so it's always available here
-const cliPath = join(__dirname, '../cli/dist/index.js');
+const cliPath = join(__dirname, './dist/index.js');
 
 if (cliPath) {
   // Run the CLI directly using node

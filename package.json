@@ -4,10 +4,10 @@
   "description": "Cocos Creator HTTP API CLI Tool - TypeScript CLI for Cocos Creator editor automation",
   "type": "module",
   "bin": {
-    "cocos-skills": "./cli/dist/index.js"
+    "cocos-skills": "./scripts/dist/index.js"
   },
   "exports": {
-    ".": "./cli/dist/lib/client.js"
+    ".": "./scripts/dist/lib/client.js"
   },
   "scripts": {
     "build": "tsc -p cli/tsconfig.json && npm run copy-scripts",
@@ -23,7 +23,7 @@
     "test:watch": "vitest watch"
   },
   "files": [
-    "cli/dist",
+    "scripts/dist",
     "skills"
   ],
   "engines": {
