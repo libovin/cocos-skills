@@ -97,6 +97,9 @@ cocos-skills asset-db query-uuid db://assets/prefabs/Tile.prefab
 | 设置组件属性 | `cocos-skills scene set-property '{"uuid":"<uuid>","component":"cc.Sprite","properties":[{"name":"color","value":{"r":255,"g":0,"b":0,"a":255},"type":"cc.Color"}]}'` |
 | 绑定节点引用 | `cocos-skills scene set-property '{"uuid":"<uuid>","component":"cc.Button","properties":[{"name":"target","value":{"uuid":"<target_uuid>"},"type":"cc.Node"}]}'` |
 | 绑定预制体引用 | `cocos-skills scene set-property '{"uuid":"<uuid>","component":"cc.Button","properties":[{"name":"tilePrefab","value":{"uuid":"<prefab_uuid>"},"type":"cc.Prefab"}]}'` |
+| 绑定组件引用（cc.Label等） | `cocos-skills scene set-property '{"uuid":"<uuid>","component":"MyScript","properties":[{"name":"label","value":{"uuid":"<组件UUID>"},"type":"cc.Label"}]}'` |
+
+> **重要提示**：当属性类型为 `cc.Label`、`cc.Sprite` 等组件类型时，`value.uuid` 必须使用**组件 UUID**（通过 `query-component --raw` 获取），而非节点 UUID。
 
 ### 资源操作
 

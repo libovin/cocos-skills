@@ -118,6 +118,55 @@ cocos-skills scene set-property '{
 }'
 ```
 
+#### 组件类型属性绑定（重要）
+
+当脚本组件的属性类型为 `cc.Label`、`cc.Sprite` 等组件类型时，**必须使用组件 UUID 而非节点 UUID**。
+
+```bash
+# 错误示例：使用节点 UUID 设置 cc.Label 类型属性（会失败）
+cocos-skills scene set-property '{
+  "uuid": "节点UUID",
+  "component": "Game2048",
+  "properties": [
+    {"name": "scoreLabel", "value": {"uuid": "节点UUID"}, "type": "cc.Label"}
+  ]
+}'
+
+# 正确示例：使用组件 UUID 设置 cc.Label 类型属性
+# 首先通过 query-component 获取组件 UUID
+cocos-skills scene query-node <节点UUID> 
+# 找到 cc.Label 组件的 uuid，如 "abc123"
+
+cocos-skills scene set-property '{
+  "uuid": "节点UUID",
+  "component": "Game2048",
+  "properties": [
+    {"name": "scoreLabel", "value": {"uuid": "cc.Label组件UUID"}, "type": "cc.Label"}
+  ]
+}'
+```
+
+**常见组件类型属性：**
+| 属性类型 | 说明 | value.uuid 应为 |
+|----------|------|-----------------|
+| `cc.Label` | 标签组件引用 | cc.Label 组件的 UUID |
+| `cc.Sprite` | 精灵组件引用 | cc.Sprite 组件的 UUID |
+| `cc.Button` | 按钮组件引用 | cc.Button 组件的 UUID |
+| `cc.Node` | 节点引用 | 节点的 UUID |
+
+**获取组件 UUID 的方法：**
+```bash
+# 查询节点下的所有组件
+cocos-skills scene query-node <节点UUID>
+
+# 返回结果中每个组件都有 uuid 字段
+# {
+#   "type": "cc.Label",
+#   "uuid": "组件UUID",  <-- 使用这个
+#   ...
+# }
+```
+
 #### 激活状态
 
 ```bash
@@ -156,12 +205,17 @@ cocos-skills scene set-property '{
 | `cc.Color` | 颜色 | `{"r":255, "g":0, "b":0, "a":255}` | 颜色相关属性 (范围 0-255) |
 | `cc.Size` | 尺寸 | `{"width":100, "height":100}` | contentSize |
 | `cc.Node` | 节点引用 | `{"uuid":"节点UUID"}` | 组件的节点引用属性 |
+| `cc.Label` | 标签组件引用 | `{"uuid":"组件UUID"}` | 脚本中的 cc.Label 类型属性 |
+| `cc.Sprite` | 精灵组件引用 | `{"uuid":"组件UUID"}` | 脚本中的 cc.Sprite 类型属性 |
+| `cc.Button` | 按钮组件引用 | `{"uuid":"组件UUID"}` | 脚本中的 cc.Button 类型属性 |
 | `cc.String` | 字符串 | `"文本内容"` | Label.string, 节点名称 |
 | `cc.Number` | 数字 | `123` 或 `123.45` | fontSize, angle |
 | `cc.Boolean` | 布尔值 | `true` 或 `false` | active, enabled |
 | `cc.Asset` | 资源引用 | `{"uuid":"资源UUID"}` | spriteFrame, material |
 | `cc.Prefab` | 预制体引用 | `{"uuid":"预制体UUID"}` | 预制体属性 |
 | `cc.SpriteFrame` | 精灵帧引用 | `{"uuid":"帧UUID"}` | Sprite.spriteFrame |
+
+> **注意**：`cc.Label`、`cc.Sprite`、`cc.Button` 等组件类型引用需要使用**组件 UUID**（通过 `query-component --raw` 获取），而非节点 UUID。
 
 ---
 
