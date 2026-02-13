@@ -1,11 +1,12 @@
 /**
  * Preprocessor for scene/set-parent
- * 为 set-parent 检测循环引用
+ * 为 set-parent 检测循环引用并验证父节点存在
  */
 
 import { ValidationError } from '../../validators/error.js';
 import type { PreprocessorFn } from '../../pipeline/types.js';
 import type { CocosClient } from '../../client.js';
+import { queryNode } from '../../utils/scene-node.js';
 
 /**
  * 简化后的节点结构（来自 query-node-tree postprocessor）
@@ -97,6 +98,17 @@ export const sceneSetParentPreprocessor: PreprocessorFn = async (
       'set-parent',
       'parent',
       `父节点 UUID 不能与要移动的节点 UUID 相同`
+    );
+  }
+
+  // Verify parent node exists
+  const parentNode = await queryNode(client, parent as string);
+  if (!parentNode) {
+    throw new ValidationError(
+      'scene',
+      'set-parent',
+      'parent',
+      `父节点 "${parent}" 不存在或无法访问。使用 query-node-tree 获取可用节点`
     );
   }
 

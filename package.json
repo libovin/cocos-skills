@@ -10,7 +10,7 @@
     ".": "./scripts/dist/lib/client.js"
   },
   "scripts": {
-    "build": "tsc -p cli/tsconfig.json && npm run copy-scripts",
+    "build": "tsc -p cli/tsconfig.json && npm run copy-scripts && npm link",
     "dev": "tsc -p cli/tsconfig.json --watch",
     "prepublishOnly": "npm run build",
     "copy-scripts": "node copy-scripts.mjs",

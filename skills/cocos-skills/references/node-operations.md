@@ -9,11 +9,8 @@
 | `query-node-tree` | 查询场景节点树 |
 | `create-node` | 创建新节点 |
 | `remove-node` | 删除节点 |
-| `copy-node` | 复制节点 |
-| `duplicate-node` | 快速复制节点 |
-| `paste-node` | 粘贴节点 |
-| `cut-node` | 剪切节点 |
-| `set-parent` | 设置父节点 |
+| `duplicate-node` | 复制节点（创建副本） |
+| `set-parent` | 移动节点（改变父节点） |
 | `reset-node` | 重置节点变换 |
 | `restore-prefab` | 恢复预制体 |
 
@@ -156,42 +153,9 @@ cocos-skills scene remove-node '{"uuid":["<节点UUID1>","<节点UUID2>"]}'
 |------|------|------|------|
 | uuid | string/array | 是 | 节点 UUID（单个字符串或 UUID 数组） |
 
-## copy-node
-
-复制节点到剪贴板。
-
-```bash
-cocos-skills scene copy-node <节点UUID>
-```
-
-### 参数
-
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| uuid | string | 是 | 要复制的节点 UUID |
-
-## paste-node
-
-粘贴剪贴板中的节点。
-
-```bash
-# 粘贴单个节点
-cocos-skills scene paste-node '{"uuids":"节点UUID","target":"目标节点UUID"}'
-
-# 粘贴多个节点
-cocos-skills scene paste-node '{"uuids":["节点UUID1","节点UUID2"],"target":"目标节点UUID"}'
-```
-
-### 参数（JSON 对象）
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| uuids | string/array | 是 | 要粘贴的节点 UUID（单个或数组） |
-| target | string | 是 | 目标父节点 UUID |
-
 ## duplicate-node
 
-快捷复制并粘贴（等同于 copy-node + paste-node）。
+复制节点并创建副本，新节点会在原节点同级位置创建。
 
 ```bash
 cocos-skills scene duplicate-node <节点UUID>
@@ -203,29 +167,32 @@ cocos-skills scene duplicate-node <节点UUID>
 |------|------|------|------|
 | uuid | string | 是 | 要复制的节点 UUID |
 
-## cut-node
+### 说明
 
-剪切节点到剪贴板。
+- 新节点与原节点具有相同的父节点
+- 新节点包含原节点的所有组件和子节点
+- 新节点名称会自动添加后缀（如 "Node (1)"）
 
-```bash
-cocos-skills scene cut-node <节点UUID>
+### 响应
+
+```json
+{
+  "success": true,
+  "data": {
+    "uuid": "新节点的UUID"
+  }
+}
 ```
-
-### 参数
-
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| uuid | string | 是 | 要剪切的节点 UUID |
 
 ## set-parent
 
-设置节点的父节点（移动节点），支持批量移动。
+移动节点到新的父节点下，支持批量移动。
 
 ```bash
-# 单个节点
+# 移动单个节点
 cocos-skills scene set-parent '{"uuids":"节点UUID","parent":"父节点UUID"}'
 
-# 多个节点
+# 批量移动多个节点
 cocos-skills scene set-parent '{"uuids":["节点UUID1","节点UUID2"],"parent":"父节点UUID"}'
 
 # 指定插入位置
@@ -236,15 +203,21 @@ cocos-skills scene set-parent '{"uuids":"节点UUID","parent":"父节点UUID","i
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| uuids | array | 是 | 要移动的节点 UUID 数组 |
+| uuids | string/array | 是 | 要移动的节点 UUID（单个字符串或数组） |
 | parent | string | 是 | 新父节点的 UUID |
 | index | number | 否 | 插入位置（默认末尾） |
 
 ### 循环检测
 
 系统会自动检测并阻止会形成循环引用的节点移动：
-- 不能将父节点移动到其子节点下
+- 不能将节点移动到其子孙节点下
 - 检测到循环会抛出错误提示
+
+### 使用场景
+
+- 调整节点层级结构
+- 将节点移动到其他容器下
+- 批量整理节点
 
 ## reset-node
 
@@ -282,11 +255,11 @@ cocos-skills scene query-node-tree
 # 2. 创建节点（parent 为必填）
 cocos-skills scene create-node '{"parent": "父节点UUID", "name": "MyNode"}'
 
-# 3. 复制节点
-cocos-skills scene copy-node <源节点UUID>
+# 3. 复制节点（创建副本）
+cocos-skills scene duplicate-node <节点UUID>
 
-# 4. 粘贴节点
-cocos-skills scene paste-node '{"uuids":"源节点UUID","target":"父节点UUID"}'
+# 4. 移动节点到其他父节点下
+cocos-skills scene set-parent '{"uuids":"节点UUID","parent":"新父节点UUID"}'
 
 # 5. 保存场景
 cocos-skills scene save-scene

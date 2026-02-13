@@ -78,8 +78,8 @@ cocos-skills asset-db query-uuid db://assets/prefabs/Tile.prefab
 | 创建节点 | `cocos-skills scene create-node '{"parent":"<uuid>","name":"Name","type":"cc.Sprite"}'` |
 | 创建节点（带组件） | `cocos-skills scene create-node '{"parent":"<uuid>","name":"Name","components":["cc.Sprite","cc.Button"]}'` |
 | 删除节点 | `cocos-skills scene remove-node '{"uuid":"<uuid>"}'` |
-| 复制节点 | `cocos-skills scene copy-node <uuid>` |
-| 粘贴节点 | `cocos-skills scene paste-node '{"uuids":"<uuid>","target":"<parent_uuid>"}'` |
+| 复制节点（创建副本） | `cocos-skills scene duplicate-node <uuid>` |
+| 移动节点 | `cocos-skills scene set-parent '{"uuids":"<uuid>","parent":"<new_parent_uuid>"}'` |
 
 ### 组件操作
 

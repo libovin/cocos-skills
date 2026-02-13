@@ -14,6 +14,7 @@ import { sceneOpenScenePreprocessor } from './scene/open-scene.preprocessor.js';
 import { sceneCloseScenePreprocessor } from './scene/close-scene.preprocessor.js';
 import { sceneCreateComponentPreprocessor } from './scene/create-component.preprocessor.js';
 import { sceneSetPropertyPreprocessor } from './scene/set-property.preprocessor.js';
+import { sceneCreateNodePreprocessor } from './scene/create-node.preprocessor.js';
 /**
  * Register all built-in preprocessors
  */
@@ -29,4 +30,5 @@ export function registerBuiltinPreprocessors() {
     registerPreprocessor('scene', 'close-scene', sceneCloseScenePreprocessor);
     registerPreprocessor('scene', 'create-component', sceneCreateComponentPreprocessor);
     registerPreprocessor('scene', 'set-property', sceneSetPropertyPreprocessor);
+    registerPreprocessor('scene', 'create-node', sceneCreateNodePreprocessor);
 }

@@ -1,9 +1,10 @@
 /**
  * Validate set-property params
+ * 只支持批量模式
  */
 
 import { ValidationError } from '../error.js';
-import { isValidProperty, getSupportedComponents, getPropertiesForComponent, isBuiltinComponent } from './component-properties.js';
+import { isValidProperty, getPropertiesForComponent, isBuiltinComponent } from './component-properties.js';
 
 const USAGE = `用法: cocos-skills scene set-property '<JSON配置>'
 
@@ -50,70 +51,48 @@ export function validateSetProperty(params: unknown[]): void {
     throw new ValidationError('scene', 'set-property', 'usage', `参数必须是 JSON 对象\n\n${USAGE}`);
   }
 
-  const { uuid, path, dump, component, properties } = options as Record<string, unknown>;
+  const { uuid, component, properties } = options as Record<string, unknown>;
 
   if (typeof uuid !== 'string' || uuid.trim() === '') {
     throw new ValidationError('scene', 'set-property', 'usage', `uuid 不能为空\n\n${USAGE}`);
   }
 
-  const isBatch = properties !== undefined;
+  // component 是可选的，默认为 cc.Node
+  const actualComponent = (component as string | undefined) ?? 'cc.Node';
+  
+  if (component !== undefined && typeof component !== 'string') {
+    throw new ValidationError('scene', 'set-property', 'usage', `component 必须是字符串\n\n${USAGE}`);
+  }
 
-  if (isBatch) {
-    // 批量模式
-    // component 是可选的，默认为 cc.Node
-    const actualComponent = (component as string | undefined) ?? 'cc.Node';
+  if (!Array.isArray(properties) || properties.length === 0) {
+    throw new ValidationError('scene', 'set-property', 'usage', `properties 必须是非空数组\n\n${USAGE}`);
+  }
+
+  for (let i = 0; i < properties.length; i++) {
+    const prop = properties[i];
+    if (typeof prop !== 'object' || prop === null) {
+      throw new ValidationError('scene', 'set-property', 'usage', `properties[${i}] 必须是对象\n\n${USAGE}`);
+    }
+    const p = prop as Record<string, unknown>;
+    if (typeof p.name !== 'string' || p.name.trim() === '') {
+      throw new ValidationError('scene', 'set-property', 'usage', `properties[${i}].name 不能为空\n\n${USAGE}`);
+    }
+    if (!('value' in p)) {
+      throw new ValidationError('scene', 'set-property', 'usage', `properties[${i}] 缺少 value\n\n${USAGE}`);
+    }
+    if (typeof p.type !== 'string' || p.type.trim() === '') {
+      throw new ValidationError('scene', 'set-property', 'usage', `properties[${i}].type 不能为空\n\n${USAGE}`);
+    }
     
-    if (component !== undefined && typeof component !== 'string') {
-      throw new ValidationError('scene', 'set-property', 'usage', `component 必须是字符串\n\n${USAGE}`);
-    }
-
-    if (!Array.isArray(properties) || properties.length === 0) {
-      throw new ValidationError('scene', 'set-property', 'usage', `properties 必须是非空数组\n\n${USAGE}`);
-    }
-
-    for (let i = 0; i < properties.length; i++) {
-      const prop = properties[i];
-      if (typeof prop !== 'object' || prop === null) {
-        throw new ValidationError('scene', 'set-property', 'usage', `properties[${i}] 必须是对象\n\n${USAGE}`);
-      }
-      const p = prop as Record<string, unknown>;
-      if (typeof p.name !== 'string' || p.name.trim() === '') {
-        throw new ValidationError('scene', 'set-property', 'usage', `properties[${i}].name 不能为空\n\n${USAGE}`);
-      }
-      if (!('value' in p)) {
-        throw new ValidationError('scene', 'set-property', 'usage', `properties[${i}] 缺少 value\n\n${USAGE}`);
-      }
-      if (typeof p.type !== 'string' || p.type.trim() === '') {
-        throw new ValidationError('scene', 'set-property', 'usage', `properties[${i}].type 不能为空\n\n${USAGE}`);
-      }
-      
-      // 只对内置组件进行属性验证，自定义脚本组件跳过验证（由 preprocessor 动态查询）
-      if (isBuiltinComponent(actualComponent) && !isValidProperty(actualComponent, p.name)) {
-        const hint = buildPropertyHint(actualComponent);
-        throw new ValidationError(
-          'scene',
-          'set-property',
-          'usage',
-          `属性名 "${p.name}" 无效${hint}`
-        );
-      }
-    }
-  } else {
-    // 单属性模式
-    if (typeof path !== 'string' || path.trim() === '') {
-      throw new ValidationError('scene', 'set-property', 'usage', `path 不能为空\n\n${USAGE}`);
-    }
-
-    if (typeof dump !== 'object' || dump === null) {
-      throw new ValidationError('scene', 'set-property', 'usage', `dump 必须是对象，包含 value 和 type\n\n${USAGE}`);
-    }
-
-    const d = dump as Record<string, unknown>;
-    if (!('value' in d)) {
-      throw new ValidationError('scene', 'set-property', 'usage', `dump 缺少 value 字段\n\n${USAGE}`);
-    }
-    if (!('type' in d) || typeof d.type !== 'string' || d.type.trim() === '') {
-      throw new ValidationError('scene', 'set-property', 'usage', `dump.type 不能为空\n\n${USAGE}`);
+    // 只对内置组件进行属性验证，自定义脚本组件跳过验证（由 preprocessor 动态查询）
+    if (isBuiltinComponent(actualComponent) && !isValidProperty(actualComponent, p.name)) {
+      const hint = buildPropertyHint(actualComponent);
+      throw new ValidationError(
+        'scene',
+        'set-property',
+        'usage',
+        `属性名 "${p.name}" 无效${hint}`
+      );
     }
   }
 }

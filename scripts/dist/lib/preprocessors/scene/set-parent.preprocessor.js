@@ -1,8 +1,9 @@
 /**
  * Preprocessor for scene/set-parent
- * 为 set-parent 检测循环引用
+ * 为 set-parent 检测循环引用并验证父节点存在
  */
 import { ValidationError } from '../../validators/error.js';
+import { queryNode } from '../../utils/scene-node.js';
 /**
  * Build a UUID to node map for quick lookup
  */
@@ -63,6 +64,11 @@ export const sceneSetParentPreprocessor = async (params, client) => {
     // Skip validation if parent is one of the nodes being moved
     if (uuids.includes(parent)) {
         throw new ValidationError('scene', 'set-parent', 'parent', `父节点 UUID 不能与要移动的节点 UUID 相同`);
+    }
+    // Verify parent node exists
+    const parentNode = await queryNode(client, parent);
+    if (!parentNode) {
+        throw new ValidationError('scene', 'set-parent', 'parent', `父节点 "${parent}" 不存在或无法访问。使用 query-node-tree 获取可用节点`);
     }
     try {
         // Query the scene node tree to check for cycles
