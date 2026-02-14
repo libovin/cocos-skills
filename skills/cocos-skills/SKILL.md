@@ -99,7 +99,7 @@ cocos-skills asset-db query-uuid db://assets/prefabs/Tile.prefab
 | 绑定预制体引用 | `cocos-skills scene set-property '{"uuid":"<uuid>","component":"cc.Button","properties":[{"name":"tilePrefab","value":{"uuid":"<prefab_uuid>"},"type":"cc.Prefab"}]}'` |
 | 绑定组件引用（cc.Label等） | `cocos-skills scene set-property '{"uuid":"<uuid>","component":"MyScript","properties":[{"name":"label","value":{"uuid":"<组件UUID>"},"type":"cc.Label"}]}'` |
 
-> **重要提示**：当属性类型为 `cc.Label`、`cc.Sprite` 等组件类型时，`value.uuid` 必须使用**组件 UUID**（通过 `query-component --raw` 获取），而非节点 UUID。
+> **重要提示**：当属性类型为 `cc.Label`、`cc.Sprite` 等组件类型时，`value.uuid` 必须使用**组件 UUID**（通过 `query-node ` 获取），而非节点 UUID。
 
 ### 资源操作
 
