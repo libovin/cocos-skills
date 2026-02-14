@@ -7,6 +7,7 @@ import { getComponentsForNodeType, getChildNodesForNodeType } from '../../node-p
 import type { PostprocessorFn } from '../../pipeline/types.js';
 import type { CocosClient } from '../../client.js';
 import type { ApiResponse } from '../../../types.js';
+import { createComponentForNode } from '../../utils/component-creation.js';
 
 /**
  * Add components and child nodes after node creation
@@ -63,13 +64,7 @@ export const sceneCreateNodePostprocessor: PostprocessorFn = async (
     const addedComponents: string[] = [];
 
     for (const component of componentsToAdd) {
-      const addResult = await client.execute(
-        'scene',
-        'create-component',
-        [{ uuid: nodeUuid, component }],
-        false
-      );
-
+      const addResult = await createComponentForNode(client, nodeUuid, component);
       if (addResult.success) {
         addedComponents.push(component);
       }

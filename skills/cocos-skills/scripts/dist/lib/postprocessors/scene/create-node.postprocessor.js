@@ -3,6 +3,7 @@
  * 在创建节点后添加组件和子节点
  */
 import { getComponentsForNodeType, getChildNodesForNodeType } from '../../node-preprocessor.js';
+import { createComponentForNode } from '../../utils/component-creation.js';
 /**
  * Add components and child nodes after node creation
  * 在创建节点后添加组件和子节点
@@ -45,7 +46,7 @@ export const sceneCreateNodePostprocessor = async (result, params, client) => {
     if (componentsToAdd.length > 0) {
         const addedComponents = [];
         for (const component of componentsToAdd) {
-            const addResult = await client.execute('scene', 'create-component', [{ uuid: nodeUuid, component }], false);
+            const addResult = await createComponentForNode(client, nodeUuid, component);
             if (addResult.success) {
                 addedComponents.push(component);
             }

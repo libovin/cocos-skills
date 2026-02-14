@@ -6,6 +6,7 @@
 import type { PostprocessorFn } from '../../pipeline/types.js';
 import type { CocosClient } from '../../client.js';
 import type { ApiResponse } from '../../../types.js';
+import { createComponentsForNode } from '../../utils/component-creation.js';
 
 interface CreateComponentData {
   uuid: string;
@@ -42,32 +43,7 @@ export const sceneCreateComponentPostprocessor: PostprocessorFn = async (
     };
   }
 
-  const results: Array<{ component: string; success: boolean; error?: string }> = [];
-
-  for (const componentType of components) {
-    try {
-      const createResult = await client.execute(
-        'scene',
-        'create-component',
-        [{
-          uuid,
-          component: componentType,
-        }],
-        false
-      );
-
-      results.push({
-        component: componentType,
-        success: createResult.success,
-      });
-    } catch (error) {
-      results.push({
-        component: componentType,
-        success: false,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
+  const results = await createComponentsForNode(client, uuid, components);
 
   const successCount = results.filter((r) => r.success).length;
 

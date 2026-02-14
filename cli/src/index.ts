@@ -70,7 +70,7 @@ Available Actions (${actions.length} total):
 `);
 
   // Group actions by category
-  const categories = groupActionsByCategory(actions);
+  const categories = groupActionsByCategory(actions, moduleName);
   for (const [category, actionList] of Object.entries(categories)) {
     console.log(`\n  ${category}:`);
     for (const action of actionList) {
@@ -152,7 +152,75 @@ Description: ${briefDesc}
  * - query-operations.test.ts: 查询
  * - camera-operations.test.ts: 相机操作
  */
-function groupActionsByCategory(actions: string[]): Record<string, string[]> {
+function groupActionsByCategory(actions: string[], moduleName?: string): Record<string, string[]> {
+  const moduleNameToUse = moduleName || detectModuleFromActions(actions);
+
+  if (moduleNameToUse === 'asset-db') {
+    return groupAssetDbActionsByCategory(actions);
+  }
+
+  return groupSceneActionsByCategory(actions);
+}
+
+/**
+ * Detect module from action names
+ */
+function detectModuleFromActions(actions: string[]): string {
+  const assetDbPatterns = ['asset', 'import', 'reimport', 'refresh', 'meta', 'uuid', 'url', 'path'];
+  for (const action of actions) {
+    for (const pattern of assetDbPatterns) {
+      if (action.includes(pattern)) {
+        return 'asset-db';
+      }
+    }
+  }
+  return 'scene';
+}
+
+/**
+ * Group asset-db actions by category
+ */
+function groupAssetDbActionsByCategory(actions: string[]): Record<string, string[]> {
+  const categories: Record<string, string[]> = {
+    '状态': [],
+    '资源操作': [],
+    '资源编辑': [],
+    '查询': [],
+  };
+
+  const statusActions = ['query-ready'];
+
+  const resourceActions = ['create-asset', 'import-asset', 'copy-asset', 'move-asset', 'delete-asset'];
+
+  const editActions = ['open-asset', 'save-asset', 'save-asset-meta', 'reimport-asset', 'refresh-asset'];
+
+  const queryActions = ['query-asset-info', 'query-missing-asset-info', 'query-asset-meta', 'query-asset-users', 'query-asset-dependencies', 'query-path', 'query-url', 'query-uuid', 'query-assets', 'generate-available-url'];
+
+  for (const action of actions) {
+    if (statusActions.includes(action)) {
+      categories['状态'].push(action);
+    } else if (resourceActions.includes(action)) {
+      categories['资源操作'].push(action);
+    } else if (editActions.includes(action)) {
+      categories['资源编辑'].push(action);
+    } else if (queryActions.includes(action)) {
+      categories['查询'].push(action);
+    }
+  }
+
+  for (const key of Object.keys(categories)) {
+    if (categories[key].length === 0) {
+      delete categories[key];
+    }
+  }
+
+  return categories;
+}
+
+/**
+ * Group scene actions by category
+ */
+function groupSceneActionsByCategory(actions: string[]): Record<string, string[]> {
   const categories: Record<string, string[]> = {
     '生命周期操作': [],
     '节点操作': [],
