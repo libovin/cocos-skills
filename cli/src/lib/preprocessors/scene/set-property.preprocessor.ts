@@ -6,12 +6,14 @@
 
 import type { PreprocessorFn, PipelineResult } from '../../pipeline/types.js';
 import type { CocosClient } from '../../client.js';
-import { isBuiltinComponent } from '../../validators/scene/component-properties.js';
 import { ValidationError } from '../../validators/error.js';
 import { extractPropertyInfo, type PropertyInfo } from '../../utils/component-props.js';
 import {
   queryNode,
   findComponentInfo,
+  queryNodeToComponentMap,
+  needsComponentUuidConversion,
+  type NodeToComponentMap,
   type SimplifiedNode,
 } from '../../utils/scene-node.js';
 
@@ -38,6 +40,44 @@ async function queryComponentProperties(client: CocosClient, componentUuid: stri
   } catch {
     return [];
   }
+}
+
+/**
+ * Convert property value based on type
+ * If value contains a node uuid and type needs component uuid, convert to component uuid
+ */
+function convertPropertyValue(
+  value: unknown,
+  propType: string,
+  nodeToComponentMap: NodeToComponentMap
+): unknown {
+  if (!needsComponentUuidConversion(propType)) {
+    return value;
+  }
+
+  const componentMap = nodeToComponentMap.get(propType);
+  if (!componentMap) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const componentUuid = componentMap.get(value);
+    return componentUuid || value;
+  }
+
+  if (value && typeof value === 'object') {
+    const valueObj = value as Record<string, unknown>;
+    const uuid = valueObj.uuid as string | undefined;
+    
+    if (uuid) {
+      const componentUuid = componentMap.get(uuid);
+      if (componentUuid) {
+        return { ...valueObj, uuid: componentUuid };
+      }
+    }
+  }
+
+  return value;
 }
 
 const USAGE = `用法: cocos-skills scene set-property '<JSON配置>'
@@ -90,6 +130,7 @@ export const sceneSetPropertyPreprocessor: PreprocessorFn = async (
 
   let pathPrefix: string;
   let componentUuid: string | undefined;
+  let queriedProperties: PropertyInfo[] = [];
 
   if (isNodeProperty) {
     // Node properties don't have __comps__ prefix
@@ -120,10 +161,10 @@ export const sceneSetPropertyPreprocessor: PreprocessorFn = async (
     // Build property path prefix
     pathPrefix = `__comps__.${componentIndex}.`;
     
-    // For non-builtin components, dynamically query and validate properties
-    if (!isBuiltinComponent(actualComponentType) && componentUuid) {
-      const validProperties = await queryComponentProperties(client, componentUuid);
-      const validPropNames = new Set(validProperties.map((p) => p.name));
+    // Always query component properties to get types
+    if (componentUuid) {
+      queriedProperties = await queryComponentProperties(client, componentUuid);
+      const validPropNames = new Set(queriedProperties.map((p) => p.name));
       
       const invalidProps: string[] = [];
       for (const prop of properties) {
@@ -138,7 +179,7 @@ export const sceneSetPropertyPreprocessor: PreprocessorFn = async (
       }
       
       if (invalidProps.length > 0) {
-        const propList = validProperties
+        const propList = queriedProperties
           .map((p) => `  ${p.name}: ${p.type}`)
           .join('\n');
         throw new ValidationError(
@@ -151,20 +192,32 @@ export const sceneSetPropertyPreprocessor: PreprocessorFn = async (
     }
   }
 
+  const queriedPropMap = new Map(queriedProperties.map((p) => [p.name, p.type]));
+
+  // Query node tree to build component mapping for value conversion
+  const nodeToComponentMap = await queryNodeToComponentMap(client);
+
   // Convert properties array to final set-property call structure
   const setPropertyCalls: Array<{ uuid: string; path: string; dump: { value: unknown; type: string } }> = [];
   for (const prop of properties) {
     if (typeof prop === 'object' && prop !== null) {
       const propObj = prop as Record<string, unknown>;
-      if (typeof propObj.name === 'string' && 'value' in propObj && typeof propObj.type === 'string') {
+      if (typeof propObj.name === 'string' && 'value' in propObj) {
         // Build full path: if pathPrefix is empty, use name directly
         const path = pathPrefix ? `${pathPrefix}${propObj.name}` : propObj.name;
+        
+        // Get type from queried properties
+        const propType = queriedPropMap.get(propObj.name) || 'unknown';
+        
+        // Convert value if needed (node uuid -> component uuid)
+        const convertedValue = convertPropertyValue(propObj.value, propType, nodeToComponentMap);
+        
         setPropertyCalls.push({
           uuid: nodeUuid,
           path,
           dump: {
-            value: propObj.value,
-            type: propObj.type,
+            value: convertedValue,
+            type: propType,
           },
         });
       }

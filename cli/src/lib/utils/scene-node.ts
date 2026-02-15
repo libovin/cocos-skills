@@ -108,3 +108,111 @@ export function getMissingComponents(
   }
   return componentTypes.filter((type) => !componentExists(components, type));
 }
+
+/**
+ * Node to component UUID mapping
+ * Maps component type -> node uuid -> component uuid
+ */
+export type NodeToComponentMap = Map<string, Map<string, string>>;
+
+/**
+ * Raw node from query-node-tree response
+ */
+interface RawTreeNode {
+  uuid: string;
+  components?: Array<{ type: string; uuid: string }>;
+  children?: RawTreeNode[];
+}
+
+/**
+ * Build node to component UUID mapping from query-node-tree result
+ * Returns a map: componentType -> nodeUuid -> componentUuid
+ */
+export function buildNodeToComponentMap(rootNode: RawTreeNode): NodeToComponentMap {
+  const map: NodeToComponentMap = new Map();
+
+  function processNode(node: RawTreeNode): void {
+    if (node.components) {
+      for (const comp of node.components) {
+        if (!map.has(comp.type)) {
+          map.set(comp.type, new Map());
+        }
+        map.get(comp.type)!.set(node.uuid, comp.uuid);
+      }
+    }
+
+    if (node.children) {
+      for (const child of node.children) {
+        processNode(child);
+      }
+    }
+  }
+
+  processNode(rootNode);
+  return map;
+}
+
+/**
+ * Query node tree and build component mapping
+ */
+export async function queryNodeToComponentMap(client: CocosClient): Promise<NodeToComponentMap> {
+  try {
+    const result = await client.execute('scene', 'query-node-tree', []);
+
+    if (!result.success || !result.data) {
+      return new Map();
+    }
+
+    return buildNodeToComponentMap(result.data as RawTreeNode);
+  } catch {
+    return new Map();
+  }
+}
+
+/**
+ * Component reference types that need node uuid to component uuid conversion
+ * cc.Node uses node uuid directly, no conversion needed
+ */
+export const COMPONENT_UUID_TYPES = [
+  'cc.Label',
+  'cc.Sprite',
+  'cc.Button',
+  'cc.Widget',
+  'cc.Layout',
+  'cc.Mask',
+  'cc.UITransform',
+  'cc.Camera',
+  'cc.Canvas',
+  'cc.AudioSource',
+  'cc.Animation',
+  'cc.ParticleSystem',
+  'cc.RigidBody2D',
+  'cc.BoxCollider2D',
+  'cc.CircleCollider2D',
+  'cc.PolygonCollider2D',
+  'cc.ScrollView',
+  'cc.EditBox',
+  'cc.ProgressBar',
+  'cc.Slider',
+  'cc.Toggle',
+  'cc.ToggleContainer',
+  'cc.PageView',
+  'cc.RichText',
+  'cc.Graphics',
+  'cc.BlockInputEvents',
+];
+
+/**
+ * Check if a type needs node uuid to component uuid conversion
+ * Returns true for component types like cc.Label, cc.Sprite, etc.
+ * Returns false for cc.Node (uses node uuid directly) and other types
+ */
+export function needsComponentUuidConversion(type: string): boolean {
+  if (COMPONENT_UUID_TYPES.includes(type)) {
+    return true;
+  }
+  if (type.startsWith('cc.') && type !== 'cc.Node' && type !== 'cc.Prefab' && type !== 'cc.SpriteFrame' && type !== 'cc.Asset') {
+    return true;
+  }
+  return false;
+}
